@@ -1,0 +1,33 @@
+# Node Modules
+node_modules/
+*/node_modules/
+
+# Environment Variables (Sangat penting agar rahasia API key tidak bocor ke publik)
+.env
+*/.env
+.env.local
+.env.*.local
+
+# Database SQLite lokal
+*.sqlite
+*.sqlite3
+backend/database.sqlite
+
+# Folder upload lokal
+backend/uploads/
+uploads/
+
+# Build Output
+dist/
+build/
+*/dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor & OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
