@@ -1,12 +1,12 @@
 import axios from 'axios';
 
-// Gunakan alamat IP Publik Azure VM Anda
-export const SERVER_BASE_URL = import.meta.env.VITE_API_URL || 'http://70.153.24.132:3001';
-export const API_BASE_URL = `${SERVER_BASE_URL}/api`;
+// Di Vercel (HTTPS), panggil relatif '/api' yang otomatis di-forward oleh Vercel Proxy ke Azure tanpa terblokir Mixed Content
+export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+export const SERVER_BASE_URL = 'http://70.153.24.132:3001';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000,
+  timeout: 30000,
 });
 
 export const getReports = async (params = {}) => {
