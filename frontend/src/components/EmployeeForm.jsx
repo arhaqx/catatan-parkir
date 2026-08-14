@@ -7,14 +7,10 @@ import {
   AlertCircle, 
   Loader2, 
   RotateCcw, 
-  Plus, 
-  Minus, 
   Sparkles, 
   Calendar as CalendarIcon, 
   FileText, 
   Trash2, 
-  Image as ImageIcon,
-  Check,
   Bike
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -138,25 +134,25 @@ const EmployeeForm = () => {
     <AuroraBackground className="flex flex-col items-center justify-start pb-28 pt-4 px-3 sm:px-6">
       {/* Top Brand & Status Bar */}
       <div className="w-full max-w-lg mb-4 flex items-center justify-between px-1">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shadow-[0_0_15px_rgba(99,102,241,0.5)]">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shadow-[0_0_15px_rgba(99,102,241,0.5)] shrink-0">
             <Bike className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-indigo-300">Parkir Pabrik</h2>
+            <h2 className="text-[11px] font-bold uppercase tracking-wider text-indigo-300">Parkir Pabrik</h2>
             <p className="text-sm font-bold text-white leading-none">Petugas Shift</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/80 border border-emerald-500/30 text-xs text-emerald-300 backdrop-blur-md">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/80 border border-emerald-500/30 text-xs text-emerald-300 backdrop-blur-md shrink-0">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          <span>Server: Azure Online</span>
+          <span className="font-medium">Server Online</span>
         </div>
       </div>
 
       {/* Main Glass Card Form */}
       <SpotlightCard className="w-full max-w-lg p-5 sm:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.6)] border-white/15">
-        {/* Header Title with React Bits ShinyText */}
+        {/* Header Title */}
         <div className="text-center mb-6">
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
             <ShinyText text="Catat Jumlah Motor" speed={3.5} />
@@ -204,7 +200,7 @@ const EmployeeForm = () => {
 
           {/* Interactive Capacity Gauge & Quick Stepper */}
           <div className="p-4 rounded-3xl bg-slate-950/60 border border-white/10 flex flex-col items-center gap-4">
-            <CapacityGauge current={motorcycles} max={MAX_CAPACITY} size={110} />
+            <CapacityGauge current={motorcycles} max={MAX_CAPACITY} size={120} />
 
             {/* Quick Step Buttons for Fast Mobile Thumb Entry */}
             <div className="w-full flex flex-col gap-2">
