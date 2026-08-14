@@ -148,9 +148,9 @@ const EmployeeForm = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/80 border border-white/10 text-xs text-slate-300 backdrop-blur-md">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/80 border border-emerald-500/30 text-xs text-emerald-300 backdrop-blur-md">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          <span>Lokal API: Port 3001</span>
+          <span>Server: Azure Online</span>
         </div>
       </div>
 
