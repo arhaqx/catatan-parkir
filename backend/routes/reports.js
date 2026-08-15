@@ -199,6 +199,7 @@ router.get('/export', async (req, res) => {
             { header: 'ID', key: 'id', width: 10 },
             { header: 'Tanggal', key: 'date', width: 16 },
             { header: 'Total Motor', key: 'total_motorcycles', width: 16 },
+            { header: 'Status Kapasitas', key: 'status_capacity', width: 22 },
             { header: 'Tarif/Unit', key: 'rate', width: 14 },
             { header: 'Total Pemasukan (Rp)', key: 'total_revenue', width: 22 },
             { header: 'Catatan Lapangan', key: 'notes', width: 35 },
@@ -210,15 +211,21 @@ router.get('/export', async (req, res) => {
         worksheet.getRow(1).fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FF4338CA' } // Indigo
+            fgColor: { argb: 'FF1A73E8' } // Google Blue
         };
 
         rows.forEach((row, idx) => {
+            const count = row.total_motorcycles || 0;
+            const isOver = count > 100;
+            const extra = Math.max(0, count - 100);
+            const statusStr = isOver ? `⚠️ Overload (+${extra} Motor)` : `Normal (${Math.round((count / 100) * 100)}%)`;
+
             worksheet.addRow({
                 no: idx + 1,
                 id: row.id,
                 date: row.date,
-                total_motorcycles: row.total_motorcycles,
+                total_motorcycles: count,
+                status_capacity: statusStr,
                 rate: 3000,
                 total_revenue: row.total_revenue,
                 notes: row.notes || '-',

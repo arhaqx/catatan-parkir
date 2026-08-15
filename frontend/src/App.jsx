@@ -21,7 +21,7 @@ function AppContent() {
               <h1 className="text-sm font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                 PARKIR PABRIK 
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-m3-primary-container text-blue-800 dark:text-m3-on-primary-container border border-blue-200 dark:border-m3-primary/30">
-                  Maks 150
+                  Standar 100 • Darurat 130
                 </span>
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">Sistem Pencatatan & Manajemen Internal • Jepara - Semarang</p>

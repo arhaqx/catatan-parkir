@@ -11,7 +11,8 @@ import {
   FileText, 
   Trash2, 
   Bike,
-  Sparkles
+  Sparkles,
+  AlertTriangle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { createReport } from '../api';
@@ -31,8 +32,11 @@ const EmployeeForm = () => {
   const [loading, setLoading] = useState(false);
 
   const RATE_PER_MOTORCYCLE = 3000;
-  const MAX_CAPACITY = 150; // Kapasitas 150 motor
+  const STANDARD_CAPACITY = 100; // Kapasitas normal
+  const MAX_EMERGENCY_CAPACITY = 130; // Batas darurat maksimum
   const revenue = motorcycles * RATE_PER_MOTORCYCLE;
+  const isOverload = motorcycles > STANDARD_CAPACITY;
+  const extraMotors = Math.max(0, motorcycles - STANDARD_CAPACITY);
 
   // Cleanup object URL
   useEffect(() => {
@@ -43,15 +47,16 @@ const EmployeeForm = () => {
     };
   }, [photoPreview]);
 
-  // Adjust count helpers for quick thumb operations on phone
+  // Adjust count helpers for fast thumb operation on mobile
   const adjustCount = (delta) => {
     setMotorcycles((prev) => {
-      const next = Math.max(0, Math.min(MAX_CAPACITY, (parseInt(prev, 10) || 0) + delta));
+      const next = Math.max(0, Math.min(MAX_EMERGENCY_CAPACITY, (parseInt(prev, 10) || 0) + delta));
       return next;
     });
   };
 
-  const handleSetMax = () => setMotorcycles(MAX_CAPACITY);
+  const handleSetStandard = () => setMotorcycles(STANDARD_CAPACITY);
+  const handleSetEmergency = () => setMotorcycles(MAX_EMERGENCY_CAPACITY);
   const handleReset = () => setMotorcycles(0);
 
   const handlePhotoChange = (e) => {
@@ -73,7 +78,7 @@ const EmployeeForm = () => {
         particleCount: 80,
         spread: 70,
         origin: { y: 0.7 },
-        colors: ['#8ab4f8', '#6dd58c', '#c2e7ff', '#fbbc04', '#1a73e8'],
+        colors: ['#8ab4f8', '#6dd58c', '#c2e7ff', '#fbbc04', '#a855f7'],
       });
     } catch (err) {
       console.log('Confetti effect:', err);
@@ -89,8 +94,8 @@ const EmployeeForm = () => {
       return;
     }
 
-    if (motorcycles > MAX_CAPACITY) {
-      setStatus({ type: 'error', message: `Kapasitas maksimal hanya ${MAX_CAPACITY} motor!` });
+    if (motorcycles > MAX_EMERGENCY_CAPACITY) {
+      setStatus({ type: 'error', message: `Batas darurat maksimal adalah ${MAX_EMERGENCY_CAPACITY} motor!` });
       return;
     }
 
@@ -108,7 +113,7 @@ const EmployeeForm = () => {
       await createReport(formData);
       setStatus({ 
         type: 'success', 
-        message: `Laporan tanggal ${format(new Date(date), 'dd MMM yyyy')} berhasil tersimpan di server!` 
+        message: `Laporan tanggal ${format(new Date(date), 'dd MMM yyyy')} (${motorcycles} motor) berhasil tersimpan!` 
       });
       triggerConfetti();
       
@@ -163,7 +168,7 @@ const EmployeeForm = () => {
             Catat Jumlah Motor
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1">
-            Kapasitas 150 unit & kalkulasi tarif otomatis
+            Standar 100 unit • Toleransi darurat hingga 130 unit
           </p>
         </div>
 
@@ -203,7 +208,17 @@ const EmployeeForm = () => {
 
           {/* Interactive Capacity Gauge & Quick Steppers */}
           <div className="p-4 rounded-3xl bg-[#f1f3f4] dark:bg-m3-surface-low border border-slate-200/80 dark:border-white/[0.06] flex flex-col items-center gap-4">
-            <CapacityGauge current={motorcycles} max={MAX_CAPACITY} size={126} />
+            <CapacityGauge current={motorcycles} standardCapacity={STANDARD_CAPACITY} maxEmergency={MAX_EMERGENCY_CAPACITY} size={126} />
+
+            {/* Overload Notice Banner */}
+            {isOverload && (
+              <div className="w-full p-2.5 rounded-2xl bg-purple-100 dark:bg-purple-950/80 border border-purple-300 dark:border-purple-500/40 text-purple-800 dark:text-purple-200 text-xs flex items-start gap-2 animate-bounce-short">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-purple-600 dark:text-purple-400" />
+                <span>
+                  <strong>Kondisi Overload (+{extraMotors} Motor):</strong> Melebihi kapasitas standar 100. Pastikan foto penataan parkir terlampir rapi ya!
+                </span>
+              </div>
+            )}
 
             {/* Quick Step Buttons */}
             <div className="w-full flex flex-col gap-2">
@@ -211,7 +226,7 @@ const EmployeeForm = () => {
                 Tombol Cepat Petugas
               </span>
 
-              {/* Stepper Buttons (Explicit type="button") */}
+              {/* Stepper Buttons */}
               <div className="grid grid-cols-5 gap-1.5">
                 <button
                   type="button"
@@ -250,17 +265,17 @@ const EmployeeForm = () => {
                 </button>
               </div>
 
-              {/* Direct Manual Number Input & Action Chips */}
+              {/* Direct Manual Number Input & Target Buttons */}
               <div className="flex items-center gap-2 mt-1">
                 <div className="relative flex-1">
                   <input
                     type="number"
                     min="0"
-                    max={MAX_CAPACITY}
+                    max={MAX_EMERGENCY_CAPACITY}
                     value={motorcycles === 0 ? '' : motorcycles}
                     onChange={(e) => {
                       const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
-                      setMotorcycles(isNaN(val) ? 0 : Math.max(0, Math.min(MAX_CAPACITY, val)));
+                      setMotorcycles(isNaN(val) ? 0 : Math.max(0, Math.min(MAX_EMERGENCY_CAPACITY, val)));
                     }}
                     placeholder="0"
                     className="w-full m3-input text-center text-xl font-bold rounded-xl py-2"
@@ -272,16 +287,26 @@ const EmployeeForm = () => {
 
                 <button
                   type="button"
-                  onClick={handleSetMax}
-                  className="px-3.5 py-2.5 rounded-xl m3-button-tonal text-xs font-bold whitespace-nowrap"
+                  onClick={handleSetStandard}
+                  className="px-3 py-2 rounded-xl m3-button-tonal text-xs font-bold whitespace-nowrap"
+                  title="Isi 100 Motor (Standar Penuh)"
                 >
-                  Maks (150)
+                  Standar (100)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSetEmergency}
+                  className="px-3 py-2 rounded-xl bg-purple-100 dark:bg-purple-950/60 hover:bg-purple-200 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-500/30 text-xs font-bold whitespace-nowrap"
+                  title="Isi 130 Motor (Batas Darurat Maksimal)"
+                >
+                  Darurat (130)
                 </button>
 
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="p-2.5 rounded-xl m3-button-tonal hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-500/20 dark:hover:text-red-400 text-slate-400 text-xs font-bold"
+                  className="p-2 rounded-xl m3-button-tonal hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-500/20 dark:hover:text-red-400 text-slate-400 text-xs font-bold"
                   title="Reset ke 0"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -297,7 +322,7 @@ const EmployeeForm = () => {
                 Total Pemasukan
               </span>
               <span className="text-[11px] text-slate-300 dark:text-slate-400 font-medium">
-                Tarif Rp 3.000 × {motorcycles} motor
+                Tarif Rp 3.000 × {motorcycles} motor {isOverload && `(termasuk +${extraMotors} motor ekstra)`}
               </span>
             </div>
             <div className="text-right">
@@ -314,7 +339,9 @@ const EmployeeForm = () => {
                 <Camera className="w-3.5 h-3.5 text-blue-600 dark:text-m3-primary" />
                 <span>Foto Bukti Lapangan</span>
               </label>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">(Opsional)</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                {isOverload ? '(Sangat Dianjurkan Saat Overload)' : '(Opsional)'}
+              </span>
             </div>
 
             {photoPreview ? (
@@ -360,16 +387,24 @@ const EmployeeForm = () => {
                 />
                 <label
                   htmlFor="photo-upload"
-                  className="w-full flex flex-col items-center justify-center h-28 border-2 border-dashed border-slate-300 dark:border-white/15 rounded-2xl cursor-pointer hover:border-blue-500 hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-all group bg-[#f8f9fa] dark:bg-m3-surface-low"
+                  className={`w-full flex flex-col items-center justify-center h-28 border-2 border-dashed rounded-2xl cursor-pointer transition-all group ${
+                    isOverload 
+                      ? 'border-purple-400/60 bg-purple-50/50 dark:bg-purple-950/20 hover:bg-purple-100/50' 
+                      : 'border-slate-300 dark:border-white/15 hover:border-blue-500 hover:bg-slate-50 dark:hover:bg-white/[0.03] bg-[#f8f9fa] dark:bg-m3-surface-low'
+                  }`}
                 >
-                  <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-m3-surface-high group-hover:bg-blue-100 dark:group-hover:bg-m3-primary-container flex items-center justify-center text-slate-600 dark:text-slate-300 group-hover:text-blue-700 dark:group-hover:text-m3-on-primary-container transition-colors mb-2">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors mb-2 ${
+                    isOverload 
+                      ? 'bg-purple-200 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300' 
+                      : 'bg-slate-200 dark:bg-m3-surface-high group-hover:bg-blue-100 dark:group-hover:bg-m3-primary-container text-slate-600 dark:text-slate-300 group-hover:text-blue-700 dark:group-hover:text-m3-on-primary-container'
+                  }`}>
                     <Camera className="w-5 h-5" />
                   </div>
                   <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-white">
                     Sentuh untuk Ambil Foto Kamera / Galeri
                   </span>
                   <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    Format JPG, PNG, atau WEBP (Tersimpan di Cloudinary)
+                    Format JPG, PNG, atau WEBP (Tersimpan aman di Cloudinary)
                   </span>
                 </label>
               </div>
@@ -388,7 +423,7 @@ const EmployeeForm = () => {
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Contoh: Kondisi aman tertib, cuaca hujan gerimis saat pergantian shift..."
+              placeholder="Contoh: Parkiran ramai overload jam 07.30, motor diselip paralel di lorong depan aman..."
               rows="2"
               className="w-full m3-input placeholder:text-slate-400 text-xs sm:text-sm rounded-2xl px-4 py-3 resize-none font-normal"
             />
