@@ -276,7 +276,7 @@ const AdminDashboard = () => {
               Admin Looker
             </span>
             <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              • Kapasitas Standar: 100 Motor • Darurat: 130
+              • Kapasitas Standar: 100 Motor • Overload: 130
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white">

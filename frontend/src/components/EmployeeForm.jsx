@@ -168,7 +168,7 @@ const EmployeeForm = () => {
             Catat Jumlah Motor
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1">
-            Standar 100 unit • Toleransi darurat hingga 130 unit
+            Standar 100 unit • Toleransi overload hingga 130 unit
           </p>
         </div>
 
@@ -298,9 +298,9 @@ const EmployeeForm = () => {
                   type="button"
                   onClick={handleSetEmergency}
                   className="px-3 py-2 rounded-xl bg-purple-100 dark:bg-purple-950/60 hover:bg-purple-200 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-500/30 text-xs font-bold whitespace-nowrap"
-                  title="Isi 130 Motor (Batas Darurat Maksimal)"
+                  title="Isi 130 Motor (Kapasitas Overload Maksimal)"
                 >
-                  Darurat (130)
+                  Overload (130)
                 </button>
 
                 <button
