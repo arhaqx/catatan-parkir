@@ -6,6 +6,36 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'Google Sans', 'Roboto', 'system-ui', '-apple-system', 'sans-serif'],
+      },
+      colors: {
+        m3: {
+          surface: '#0f1318',
+          'surface-dim': '#0b0e12',
+          'surface-bright': '#353940',
+          'surface-low': '#15191f',
+          'surface-container': '#1c2128',
+          'surface-high': '#242a33',
+          'surface-highest': '#2e3540',
+          primary: '#8ab4f8',
+          'primary-hover': '#a8c7fa',
+          'primary-container': '#0842a0',
+          'on-primary': '#002d6c',
+          'on-primary-container': '#d3e3fd',
+          secondary: '#c2e7ff',
+          'secondary-container': '#004a77',
+          'on-secondary-container': '#c2e7ff',
+          tertiary: '#6dd58c',
+          'tertiary-container': '#005322',
+          'on-tertiary-container': '#c4eed0',
+          error: '#f2b8b5',
+          'error-container': '#8c1d18',
+          'on-error-container': '#f9dedc',
+          outline: '#8c9199',
+          'outline-variant': '#43474e',
+        }
+      },
       animation: {
         'aurora': 'aurora 20s ease infinite',
         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -31,10 +61,6 @@ export default {
           '100%': { boxShadow: '0 0 30px rgba(168, 85, 247, 0.6)' },
         }
       },
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'aurora-mesh': 'linear-gradient(-45deg, #0f172a, #1e1b4b, #311042, #0f172a)',
-      }
     },
   },
   plugins: [],

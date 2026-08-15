@@ -7,19 +7,19 @@ import {
   AlertCircle, 
   Loader2, 
   RotateCcw, 
-  Sparkles, 
   Calendar as CalendarIcon, 
   FileText, 
   Trash2, 
-  Bike
+  Bike,
+  Sparkles,
+  Server
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { createReport } from '../api';
 import AuroraBackground from './ui/AuroraBackground';
-import SpotlightCard from './ui/SpotlightCard';
+import M3Card from './ui/M3Card';
 import CapacityGauge from './ui/CapacityGauge';
 import AnimatedCounter from './ui/AnimatedCounter';
-import ShinyText from './ui/ShinyText';
 
 const EmployeeForm = () => {
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -43,7 +43,7 @@ const EmployeeForm = () => {
     };
   }, [photoPreview]);
 
-  // Adjust count helpers for easy thumb operation on phone
+  // Adjust count helpers for fast thumb operation on mobile
   const adjustCount = (delta) => {
     setMotorcycles((prev) => {
       const next = Math.max(0, Math.min(MAX_CAPACITY, (parseInt(prev, 10) || 0) + delta));
@@ -51,13 +51,8 @@ const EmployeeForm = () => {
     });
   };
 
-  const handleSetMax = () => {
-    setMotorcycles(MAX_CAPACITY);
-  };
-
-  const handleReset = () => {
-    setMotorcycles(0);
-  };
+  const handleSetMax = () => setMotorcycles(MAX_CAPACITY);
+  const handleReset = () => setMotorcycles(0);
 
   const handlePhotoChange = (e) => {
     const file = e.target.files?.[0];
@@ -78,7 +73,7 @@ const EmployeeForm = () => {
         particleCount: 80,
         spread: 70,
         origin: { y: 0.7 },
-        colors: ['#6366f1', '#a855f7', '#ec4899', '#10b981', '#38bdf8'],
+        colors: ['#8ab4f8', '#6dd58c', '#c2e7ff', '#fbbc04', '#1a73e8'],
       });
     } catch (err) {
       console.log('Confetti effect:', err);
@@ -113,11 +108,11 @@ const EmployeeForm = () => {
       await createReport(formData);
       setStatus({ 
         type: 'success', 
-        message: `Laporan tanggal ${format(new Date(date), 'dd MMM yyyy')} berhasil tersimpan!` 
+        message: `Laporan tanggal ${format(new Date(date), 'dd MMM yyyy')} berhasil tersimpan di server!` 
       });
       triggerConfetti();
       
-      // Reset form
+      // Reset form fields
       setNotes('');
       setPhoto(null);
       setPhotoPreview('');
@@ -132,49 +127,55 @@ const EmployeeForm = () => {
 
   return (
     <AuroraBackground className="flex flex-col items-center justify-start pb-28 pt-4 px-3 sm:px-6">
-      {/* Top Brand & Status Bar */}
+      {/* Top Google Stitch App Bar */}
       <div className="w-full max-w-lg mb-4 flex items-center justify-between px-1">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shadow-[0_0_15px_rgba(99,102,241,0.5)] shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-[0_4px_16px_rgba(26,115,232,0.4)] shrink-0">
             <Bike className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-[11px] font-bold uppercase tracking-wider text-indigo-300">Parkir Pabrik</h2>
-            <p className="text-sm font-bold text-white leading-none">Petugas Shift</p>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-m3-primary bg-m3-primary-container/60 px-2 py-0.5 rounded-md">
+                Shift Kerja
+              </span>
+              <span className="text-[11px] text-slate-400 font-medium">Jepara</span>
+            </div>
+            <h1 className="text-base font-bold text-white leading-tight">Parkir Pabrik</h1>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/80 border border-emerald-500/30 text-xs text-emerald-300 backdrop-blur-md shrink-0">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          <span className="font-medium">Server Online</span>
+        {/* Live Azure Server Chip */}
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-m3-surface-high border border-white/10 text-xs text-m3-tertiary shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-m3-tertiary animate-pulse" />
+          <span className="font-semibold text-[11px]">Azure Online</span>
         </div>
       </div>
 
-      {/* Main Glass Card Form */}
-      <SpotlightCard className="w-full max-w-lg p-5 sm:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.6)] border-white/15">
-        {/* Header Title */}
+      {/* Main Google Stitch Surface Container */}
+      <M3Card level="container" className="w-full max-w-lg p-5 sm:p-7">
+        {/* Title Header */}
         <div className="text-center mb-6">
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-            <ShinyText text="Catat Jumlah Motor" speed={3.5} />
-          </h1>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            Catat Jumlah Motor
+          </h2>
           <p className="text-slate-400 text-xs sm:text-sm mt-1">
-            Input cepat kondisi lapangan & kalkulasi otomatis
+            Input kondisi parkiran lapangan & kalkulasi tarif otomatis
           </p>
         </div>
 
-        {/* Feedback Alert Toast */}
+        {/* Status Toast Alert */}
         {status.message && (
           <div 
-            className={`mb-5 p-3.5 rounded-2xl flex items-center gap-3 transition-all animate-bounce-short ${
+            className={`mb-5 p-3.5 rounded-2xl flex items-center gap-3 transition-all ${
               status.type === 'success' 
-                ? 'bg-emerald-950/70 text-emerald-200 border border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.2)]' 
-                : 'bg-red-950/70 text-red-200 border border-red-500/40 shadow-[0_0_20px_rgba(239,68,68,0.2)]'
+                ? 'bg-emerald-950/80 text-emerald-200 border border-emerald-500/40 shadow-[0_4px_20px_rgba(16,185,129,0.2)]' 
+                : 'bg-red-950/80 text-red-200 border border-red-500/40 shadow-[0_4px_20px_rgba(239,68,68,0.2)]'
             }`}
           >
             {status.type === 'success' ? (
-              <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
+              <CheckCircle2 className="w-5 h-5 shrink-0 text-m3-tertiary" />
             ) : (
-              <AlertCircle className="w-5 h-5 shrink-0 text-red-400" />
+              <AlertCircle className="w-5 h-5 shrink-0 text-m3-error" />
             )}
             <p className="text-xs sm:text-sm font-medium flex-1">{status.message}</p>
           </div>
@@ -184,70 +185,68 @@ const EmployeeForm = () => {
           {/* Tanggal Input */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-300 ml-1 flex items-center gap-1.5">
-              <CalendarIcon className="w-3.5 h-3.5 text-indigo-400" />
+              <CalendarIcon className="w-3.5 h-3.5 text-m3-primary" />
               <span>Tanggal Laporan</span>
             </label>
-            <div className="relative">
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full glass-input text-white rounded-2xl px-4 py-3 text-sm focus:outline-none transition-all"
-                required
-              />
-            </div>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full m3-input text-white rounded-2xl px-4 py-3 text-sm font-medium"
+              required
+            />
           </div>
 
-          {/* Interactive Capacity Gauge & Quick Stepper */}
-          <div className="p-4 rounded-3xl bg-slate-950/60 border border-white/10 flex flex-col items-center gap-4">
-            <CapacityGauge current={motorcycles} max={MAX_CAPACITY} size={120} />
+          {/* Interactive Capacity Gauge & Quick Steppers */}
+          <div className="p-4 rounded-3xl bg-m3-surface-low border border-white/[0.06] flex flex-col items-center gap-4">
+            <CapacityGauge current={motorcycles} max={MAX_CAPACITY} size={126} />
 
-            {/* Quick Step Buttons for Fast Mobile Thumb Entry */}
+            {/* Quick Step Buttons */}
             <div className="w-full flex flex-col gap-2">
-              <span className="text-[11px] font-medium text-slate-400 text-center uppercase tracking-wider">
+              <span className="text-[11px] font-bold text-slate-400 text-center uppercase tracking-wider">
                 Tombol Cepat Petugas
               </span>
 
-              {/* Main Stepper Counter */}
+              {/* Stepper Buttons (All have explicit type="button") */}
               <div className="grid grid-cols-5 gap-1.5">
                 <button
                   type="button"
                   onClick={() => adjustCount(-10)}
-                  className="py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-bold transition-all border border-white/5"
+                  className="py-2.5 rounded-xl m3-button-tonal text-xs font-bold"
                 >
                   -10
                 </button>
                 <button
                   type="button"
                   onClick={() => adjustCount(-1)}
-                  className="py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-bold transition-all border border-white/5"
+                  className="py-2.5 rounded-xl m3-button-tonal text-xs font-bold"
                 >
                   -1
                 </button>
                 <button
                   type="button"
                   onClick={() => adjustCount(1)}
-                  className="py-2.5 rounded-xl bg-indigo-600/60 hover:bg-indigo-600 active:scale-95 text-indigo-100 text-xs font-bold transition-all border border-indigo-400/30"
+                  className="py-2.5 rounded-xl bg-m3-primary-container/80 hover:bg-m3-primary-container active:scale-95 text-m3-on-primary-container text-xs font-bold transition-all border border-m3-primary/30"
                 >
                   +1
                 </button>
                 <button
                   type="button"
                   onClick={() => adjustCount(5)}
-                  className="py-2.5 rounded-xl bg-indigo-600/60 hover:bg-indigo-600 active:scale-95 text-indigo-100 text-xs font-bold transition-all border border-indigo-400/30"
+                  className="py-2.5 rounded-xl bg-m3-primary-container/80 hover:bg-m3-primary-container active:scale-95 text-m3-on-primary-container text-xs font-bold transition-all border border-m3-primary/30"
                 >
                   +5
                 </button>
                 <button
                   type="button"
                   onClick={() => adjustCount(10)}
-                  className="py-2.5 rounded-xl bg-purple-600/60 hover:bg-purple-600 active:scale-95 text-purple-100 text-xs font-bold transition-all border border-purple-400/30"
+                  className="py-2.5 rounded-xl bg-blue-600/70 hover:bg-blue-600 active:scale-95 text-white text-xs font-bold transition-all border border-blue-400/40"
                 >
                   +10
                 </button>
               </div>
 
-              {/* Direct Manual Input & Action Chips */}
+              {/* Direct Manual Number Input & Action Chips */}
               <div className="flex items-center gap-2 mt-1">
                 <div className="relative flex-1">
                   <input
@@ -260,9 +259,9 @@ const EmployeeForm = () => {
                       setMotorcycles(isNaN(val) ? 0 : Math.max(0, Math.min(MAX_CAPACITY, val)));
                     }}
                     placeholder="0"
-                    className="w-full glass-input text-center text-xl font-bold text-white rounded-xl py-2 focus:outline-none"
+                    className="w-full m3-input text-center text-xl font-bold text-white rounded-xl py-2"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
                     Unit
                   </span>
                 </div>
@@ -270,7 +269,7 @@ const EmployeeForm = () => {
                 <button
                   type="button"
                   onClick={handleSetMax}
-                  className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all border border-white/5 active:scale-95"
+                  className="px-3.5 py-2.5 rounded-xl m3-button-tonal text-xs font-bold"
                 >
                   Maks (100)
                 </button>
@@ -278,7 +277,7 @@ const EmployeeForm = () => {
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="p-2.5 rounded-xl bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 text-xs font-semibold transition-all border border-white/5 active:scale-95"
+                  className="p-2.5 rounded-xl m3-button-tonal hover:bg-red-500/20 hover:text-red-400 text-slate-400 text-xs font-bold"
                   title="Reset ke 0"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -287,13 +286,13 @@ const EmployeeForm = () => {
             </div>
           </div>
 
-          {/* Real-time Animated Revenue Card */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-950/60 via-purple-950/60 to-slate-950/60 border border-indigo-500/30 shadow-[0_0_25px_rgba(99,102,241,0.15)] flex justify-between items-center group">
+          {/* Revenue Highlight Card - Google Finance Style */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-[#0d2a4a] via-[#112338] to-[#15191f] border border-blue-500/30 flex justify-between items-center shadow-[0_4px_20px_rgba(26,115,232,0.15)]">
             <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-indigo-300 block">
+              <span className="text-xs font-bold uppercase tracking-wider text-m3-primary block">
                 Total Pemasukan
               </span>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-[11px] text-slate-400 font-medium">
                 Tarif Rp 3.000 × {motorcycles} motor
               </span>
             </div>
@@ -304,27 +303,27 @@ const EmployeeForm = () => {
             </div>
           </div>
 
-          {/* Camera / Photo Upload Field */}
+          {/* Photo Upload Field */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between ml-1">
               <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <Camera className="w-3.5 h-3.5 text-indigo-400" />
+                <Camera className="w-3.5 h-3.5 text-m3-primary" />
                 <span>Foto Bukti Lapangan</span>
               </label>
-              <span className="text-[11px] text-slate-500 font-medium">(Opsional)</span>
+              <span className="text-[11px] text-slate-400 font-medium">(Opsional)</span>
             </div>
 
             {photoPreview ? (
-              <div className="relative rounded-2xl overflow-hidden border border-indigo-500/40 bg-slate-900 group">
+              <div className="relative rounded-2xl overflow-hidden border border-m3-primary/40 bg-m3-surface-low group">
                 <img 
                   src={photoPreview} 
                   alt="Bukti Lapangan" 
                   className="w-full h-44 object-cover"
                 />
-                <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                   <label 
                     htmlFor="photo-upload-change"
-                    className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold cursor-pointer flex items-center gap-1.5 transition-all shadow-lg active:scale-95"
+                    className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold cursor-pointer flex items-center gap-1.5 shadow-md active:scale-95 transition-all"
                   >
                     <Camera className="w-3.5 h-3.5" /> Ganti
                   </label>
@@ -339,7 +338,7 @@ const EmployeeForm = () => {
                   <button
                     type="button"
                     onClick={handleRemovePhoto}
-                    className="px-3 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-lg active:scale-95"
+                    className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition-all"
                   >
                     <Trash2 className="w-3.5 h-3.5" /> Hapus
                   </button>
@@ -357,16 +356,16 @@ const EmployeeForm = () => {
                 />
                 <label
                   htmlFor="photo-upload"
-                  className="w-full flex flex-col items-center justify-center h-28 border-2 border-dashed border-white/15 rounded-2xl cursor-pointer hover:border-indigo-400 hover:bg-white/5 transition-all group"
+                  className="w-full flex flex-col items-center justify-center h-28 border-2 border-dashed border-white/15 rounded-2xl cursor-pointer hover:border-m3-primary hover:bg-white/[0.03] transition-all group bg-m3-surface-low"
                 >
-                  <div className="w-10 h-10 rounded-full bg-slate-800/80 group-hover:bg-indigo-600/30 flex items-center justify-center text-slate-300 group-hover:text-indigo-300 transition-colors mb-2">
+                  <div className="w-10 h-10 rounded-full bg-m3-surface-high group-hover:bg-m3-primary-container flex items-center justify-center text-slate-300 group-hover:text-m3-on-primary-container transition-colors mb-2">
                     <Camera className="w-5 h-5" />
                   </div>
-                  <span className="text-xs font-medium text-slate-300 group-hover:text-white">
+                  <span className="text-xs font-semibold text-slate-300 group-hover:text-white">
                     Sentuh untuk Ambil Foto Kamera / Galeri
                   </span>
-                  <span className="text-[10px] text-slate-500 mt-0.5">
-                    Format JPG, PNG, atau WEBP
+                  <span className="text-[10px] text-slate-400 mt-0.5">
+                    Format JPG, PNG, atau WEBP (Tersimpan aman di Cloudinary)
                   </span>
                 </label>
               </div>
@@ -377,41 +376,41 @@ const EmployeeForm = () => {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between ml-1">
               <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-indigo-400" />
+                <FileText className="w-3.5 h-3.5 text-m3-primary" />
                 <span>Catatan Lapangan</span>
               </label>
-              <span className="text-[11px] text-slate-500 font-medium">(Opsional)</span>
+              <span className="text-[11px] text-slate-400 font-medium">(Opsional)</span>
             </div>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Contoh: Parkiran aman tertib, cuaca hujan gerimis saat pergantian shift..."
+              placeholder="Contoh: Kondisi aman tertib, cuaca hujan gerimis saat pergantian shift..."
               rows="2"
-              className="w-full glass-input text-white placeholder:text-slate-500 text-xs sm:text-sm rounded-2xl px-4 py-3 focus:outline-none transition-all resize-none"
+              className="w-full m3-input text-white placeholder:text-slate-500 text-xs sm:text-sm rounded-2xl px-4 py-3 resize-none font-normal"
             />
           </div>
 
-          {/* Submit Action Button */}
+          {/* Submit Primary Filled Action Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-bold py-4 rounded-2xl shadow-[0_0_30px_rgba(99,102,241,0.4)] transform active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed group"
+            className="w-full m3-button-primary font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed group cursor-pointer"
           >
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                <span className="text-sm">Menyimpan Laporan...</span>
+                <span className="text-sm font-semibold">Menyimpan Laporan...</span>
               </>
             ) : (
               <>
                 <Send className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                <span className="text-sm">Kirim Laporan Parkir</span>
+                <span className="text-sm font-bold">Kirim Laporan Parkir</span>
                 <Sparkles className="w-4 h-4 opacity-80" />
               </>
             )}
           </button>
         </form>
-      </SpotlightCard>
+      </M3Card>
     </AuroraBackground>
   );
 };

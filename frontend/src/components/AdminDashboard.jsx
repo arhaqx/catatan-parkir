@@ -1,89 +1,77 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { format, subDays, startOfWeek, startOfMonth, isWithinInterval, parseISO } from 'date-fns';
+import { id } from 'date-fns/locale';
 import DatePicker from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
-import { 
-  format, 
-  subDays, 
-  startOfMonth, 
-  startOfWeek, 
-  endOfWeek,
-  endOfMonth,
-  isToday 
-} from 'date-fns';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip as RechartsTooltip, 
-  ResponsiveContainer, 
+import 'react-datepicker/dist/react-datepicker.css';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
   AreaChart,
-  Area 
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
 } from 'recharts';
-import { 
-  Download, 
-  Calendar as CalendarIcon, 
-  Activity, 
-  CreditCard, 
-  ImageIcon, 
-  X, 
-  Loader2, 
-  Trash2, 
-  Sparkles, 
-  LayoutList, 
-  LayoutGrid, 
-  TrendingUp, 
-  Percent, 
-  CheckCircle2, 
-  AlertCircle,
+import {
+  Calendar as CalendarIcon,
+  Download,
+  TrendingUp,
+  DollarSign,
+  Bike,
+  Percent,
   RefreshCw,
+  Sparkles,
+  LayoutGrid,
+  Table as TableIcon,
+  X,
+  ExternalLink,
+  ChevronRight,
+  Filter,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Trash2,
   Eye,
-  Bike
+  Activity,
+  Layers
 } from 'lucide-react';
-import { 
-  getReports, 
-  deleteReport, 
-  seedSampleReports, 
-  exportReportsToExcel, 
-  baseURL 
-} from '../api';
+import { getReports, deleteReport, seedSampleReports, exportReportsToExcel, baseURL } from '../api';
 import AuroraBackground from './ui/AuroraBackground';
-import SpotlightCard from './ui/SpotlightCard';
+import M3Card from './ui/M3Card';
 import AnimatedCounter from './ui/AnimatedCounter';
-import ShinyText from './ui/ShinyText';
 
 const AdminDashboard = () => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [seeding, setSeeding] = useState(false);
-  const [activeShortcut, setActiveShortcut] = useState('week');
-  const [dateRange, setDateRange] = useState([subDays(new Date(), 6), new Date()]);
+  const [chartType, setChartType] = useState('bar'); // 'bar' | 'area'
+  const [viewMode, setViewMode] = useState('table'); // 'cards' | 'table'
+  const [dateRange, setDateRange] = useState([subDays(new Date(), 29), new Date()]);
   const [startDate, endDate] = dateRange;
-  const [selectedPhoto, setSelectedPhoto] = useState(null);
-  const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'table'
-  const [chartType, setChartType] = useState('motor'); // 'motor' or 'revenue'
+  const [activeShortcut, setActiveShortcut] = useState('month');
+  const [previewPhoto, setPreviewPhoto] = useState(null);
   const [toast, setToast] = useState({ type: '', message: '' });
 
   const showToast = (type, message) => {
     setToast({ type, message });
-    setTimeout(() => {
-      setToast({ type: '', message: '' });
-    }, 4000);
+    setTimeout(() => setToast({ type: '', message: '' }), 4000);
   };
 
   const fetchReports = async () => {
     setLoading(true);
     try {
-      const start = startDate ? format(startDate, 'yyyy-MM-dd') : '';
-      const end = endDate ? format(endDate, 'yyyy-MM-dd') : '';
-      
-      const data = await getReports({ startDate: start, endDate: end });
-      setReports(data);
+      const params = {};
+      if (startDate) params.startDate = format(startDate, 'yyyy-MM-dd');
+      if (endDate) params.endDate = format(endDate, 'yyyy-MM-dd');
+
+      const data = await getReports(params);
+      setReports(data || []);
     } catch (error) {
-      console.error('Error fetching reports:', error);
-      showToast('error', 'Gagal memuat data dari server.');
+      console.error(error);
+      showToast('error', 'Gagal memuat data laporan dari server.');
     } finally {
       setLoading(false);
     }
@@ -93,49 +81,45 @@ const AdminDashboard = () => {
     fetchReports();
   }, [startDate, endDate]);
 
-  const handleExport = async () => {
-    if (reports.length === 0) {
-      showToast('error', 'Tidak ada data untuk diekspor.');
-      return;
-    }
-
-    setExporting(true);
-    try {
-      const start = startDate ? format(startDate, 'yyyy-MM-dd') : '';
-      const end = endDate ? format(endDate, 'yyyy-MM-dd') : '';
-      
-      const blobData = await exportReportsToExcel({ startDate: start, endDate: end });
-      
-      const url = window.URL.createObjectURL(new Blob([blobData]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Laporan_Parkir_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      
-      showToast('success', 'File Excel berhasil diunduh!');
-    } catch (error) {
-      console.error('Error exporting data:', error);
-      showToast('error', 'Gagal mengekspor data ke Excel.');
-    } finally {
-      setExporting(false);
-    }
-  };
-
   const handleSeed = async () => {
-    if (!window.confirm('Ingin menambahkan 7 data simulasi untuk melihat grafik?')) return;
     setSeeding(true);
     try {
-      await seedSampleReports();
-      showToast('success', 'Sample data simulasi berhasil dibuat!');
+      const result = await seedSampleReports();
+      showToast('success', result.message || '7 data sampel berhasil ditambahkan!');
       fetchReports();
     } catch (error) {
       console.error(error);
-      showToast('error', 'Gagal membuat sample data.');
+      showToast('error', 'Gagal menambahkan sample data.');
     } finally {
       setSeeding(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const params = {};
+      if (startDate) params.startDate = format(startDate, 'yyyy-MM-dd');
+      if (endDate) params.endDate = format(endDate, 'yyyy-MM-dd');
+
+      const blobData = await exportReportsToExcel(params);
+      const url = window.URL.createObjectURL(new Blob([blobData]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute(
+        'download',
+        `Laporan_Parkir_Pabrik_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      showToast('success', 'File Excel berhasil diunduh!');
+    } catch (error) {
+      console.error(error);
+      showToast('error', 'Gagal mengunduh file Excel.');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -192,7 +176,6 @@ const AdminDashboard = () => {
   }, [reports, totalMotorcycles]);
 
   const averageOccupancy = useMemo(() => {
-    // 100 max capacity
     return Math.min(Math.round((averageDaily / 100) * 100), 100);
   }, [averageDaily]);
 
@@ -200,6 +183,7 @@ const AdminDashboard = () => {
     if (!path) return '';
     return path.startsWith('http') ? path : `${baseURL}${path}`;
   };
+
   const chartData = useMemo(() => {
     return [...reports]
       .sort((a, b) => new Date(a.date) - new Date(b.date))
@@ -222,29 +206,29 @@ const AdminDashboard = () => {
               : 'bg-red-950/90 text-red-200 border-red-500/50'
           }`}>
             {toast.type === 'success' ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-5 h-5 text-m3-tertiary shrink-0" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+              <AlertCircle className="w-5 h-5 text-m3-error shrink-0" />
             )}
             <span className="text-xs sm:text-sm font-medium">{toast.message}</span>
           </div>
         </div>
       )}
 
-      {/* Header Bar */}
+      {/* Header Bar - Google Looker Studio Style */}
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-              Admin Area
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-m3-primary-container text-m3-on-primary-container border border-m3-primary/30">
+              Admin Looker
             </span>
-            <span className="text-xs text-slate-400">• Kapasitas Pabrik: 100 Motor</span>
+            <span className="text-xs text-slate-400 font-medium">• Kapasitas Parkir: 100 Motor</span>
           </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
-            <ShinyText text="Dashboard Analitik Parkir" speed={3} />
+            Dashboard Analitik Parkir
           </h1>
-          <p className="text-slate-400 text-xs sm:text-sm mt-1">
-            Pantau arus motor harian, statistik pemasukan, dan unduh laporan
+          <p className="text-slate-400 text-xs sm:text-sm mt-0.5">
+            Pantau pemasukan, kapasitas motor harian, dan unduh laporan Excel
           </p>
         </div>
 
@@ -253,19 +237,19 @@ const AdminDashboard = () => {
           <button
             onClick={fetchReports}
             disabled={loading}
-            className="p-2.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 border border-white/10 text-slate-300 hover:text-white transition-all active:scale-95 shadow-sm"
+            className="p-2.5 rounded-2xl m3-button-tonal text-slate-300 hover:text-white"
             title="Muat ulang data"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-indigo-400' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-m3-primary' : ''}`} />
           </button>
 
           {reports.length === 0 && !loading && (
             <button
               onClick={handleSeed}
               disabled={seeding}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/40 text-purple-200 text-xs font-semibold transition-all active:scale-95"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-m3-surface-high hover:bg-m3-surface-highest border border-white/10 text-m3-secondary text-xs font-semibold"
             >
-              <Sparkles className="w-4 h-4 text-purple-400" />
+              <Sparkles className="w-4 h-4 text-m3-primary" />
               <span>{seeding ? 'Membuat...' : '+ Isi Sample Data'}</span>
             </button>
           )}
@@ -273,7 +257,7 @@ const AdminDashboard = () => {
           <button
             onClick={handleExport}
             disabled={exporting || reports.length === 0}
-            className="flex-1 md:flex-initial flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-4 py-2.5 rounded-2xl transition-all shadow-[0_0_20px_rgba(99,102,241,0.4)] active:scale-95 font-semibold text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            className="flex-1 md:flex-initial flex items-center justify-center gap-2 m3-button-primary px-4 py-2.5 rounded-2xl font-bold text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
           >
             {exporting ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -286,197 +270,195 @@ const AdminDashboard = () => {
       </div>
 
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* Date Filter & Shortcuts */}
-        <SpotlightCard className="p-4 sm:p-5 border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.4)]">
-          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-            {/* Shortcuts */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-2 lg:pb-0 scrollbar-none">
+        {/* Date Filter & Google Segmented Chips */}
+        <M3Card level="container" className="p-4 sm:p-5">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            {/* Segmented Filter Chips */}
+            <div className="flex items-center gap-1.5 flex-wrap w-full lg:w-auto">
+              <span className="text-xs font-bold text-slate-400 mr-1 flex items-center gap-1">
+                <Filter className="w-3.5 h-3.5 text-m3-primary" /> Filter:
+              </span>
               {[
                 { id: 'today', label: 'Hari Ini' },
                 { id: '7days', label: '7 Hari Terakhir' },
                 { id: 'week', label: 'Minggu Ini' },
                 { id: 'month', label: 'Bulan Ini' },
                 { id: 'all', label: 'Semua Waktu' },
-              ].map((sc) => (
+              ].map((chip) => (
                 <button
-                  key={sc.id}
-                  onClick={() => handleShortcut(sc.id)}
-                  className={`whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
-                    activeShortcut === sc.id
-                      ? 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)] border border-indigo-400/40'
-                      : 'bg-slate-800/70 hover:bg-slate-700/80 text-slate-300 border border-white/5'
+                  key={chip.id}
+                  onClick={() => handleShortcut(chip.id)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 active:scale-95 ${
+                    activeShortcut === chip.id
+                      ? 'bg-m3-primary-container text-m3-on-primary-container border border-m3-primary/40 shadow-xs'
+                      : 'bg-m3-surface-low text-slate-400 hover:text-slate-200 border border-white/[0.06] hover:bg-m3-surface-high'
                   }`}
                 >
-                  {sc.label}
+                  {chip.label}
                 </button>
               ))}
             </div>
 
-            {/* Custom Date Picker */}
-            <div className="flex items-center gap-2.5 bg-slate-950/80 px-3.5 py-2 rounded-2xl border border-white/10 text-xs">
-              <CalendarIcon className="w-4 h-4 text-indigo-400 shrink-0" />
-              <DatePicker
-                selectsRange={true}
-                startDate={startDate}
-                endDate={endDate}
-                onChange={(update) => {
-                  setActiveShortcut('custom');
-                  setDateRange(update);
-                }}
-                isClearable={true}
-                placeholderText="Pilih rentang tanggal khusus"
-                className="bg-transparent outline-none text-white text-xs font-medium w-full min-w-[200px] cursor-pointer"
-                dateFormat="dd/MM/yyyy"
-              />
+            {/* Custom Date Range Picker */}
+            <div className="flex items-center gap-2 w-full lg:w-auto">
+              <div className="relative flex-1 lg:w-64">
+                <DatePicker
+                  selectsRange={true}
+                  startDate={startDate}
+                  endDate={endDate}
+                  onChange={(update) => {
+                    setDateRange(update);
+                    setActiveShortcut('custom');
+                  }}
+                  isClearable={true}
+                  placeholderText="Pilih rentang tanggal..."
+                  dateFormat="dd/MM/yyyy"
+                  className="w-full m3-input text-xs sm:text-sm font-medium rounded-xl px-3.5 py-2 pl-9 focus:outline-none"
+                />
+                <CalendarIcon className="w-4 h-4 text-m3-primary absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
           </div>
-        </SpotlightCard>
+        </M3Card>
 
-        {/* 3 Metric Cards with Spotlight Effect */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Card 1: Total Pendapatan */}
-          <SpotlightCard className="p-5 border-white/10 relative group" spotlightColor="rgba(16, 185, 129, 0.2)">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Total Pendapatan
+        {/* 3 Metric Cards - Google Cloud Looker Aesthetics */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Total Revenue */}
+          <M3Card level="container" className="p-5 border-l-4 border-l-blue-500 relative overflow-hidden group">
+            <div className="flex justify-between items-start mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Total Pemasukan
               </span>
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
-                <CreditCard className="w-5 h-5" />
+              <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-m3-primary flex items-center justify-center">
+                <DollarSign className="w-4 h-4" />
               </div>
             </div>
             <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
               <AnimatedCounter value={totalRevenue} prefix="Rp " />
             </div>
-            <p className="text-[11px] text-emerald-400 font-medium mt-1 flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" />
-              Tarif flat Rp 3.000 / motor
+            <p className="text-[11px] text-slate-400 mt-1 font-medium">
+              Dari total {reports.length} hari shift kerja
             </p>
-          </SpotlightCard>
+          </M3Card>
 
-          {/* Card 2: Total Motor */}
-          <SpotlightCard className="p-5 border-white/10 relative group" spotlightColor="rgba(99, 102, 241, 0.2)">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Total Motor Masuk
+          {/* Total Motorcycles */}
+          <M3Card level="container" className="p-5 border-l-4 border-l-emerald-500 relative overflow-hidden group">
+            <div className="flex justify-between items-start mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Total Unit Terlayani
               </span>
-              <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
-                <Bike className="w-5 h-5" />
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-m3-tertiary flex items-center justify-center">
+                <Bike className="w-4 h-4" />
               </div>
             </div>
             <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              <AnimatedCounter value={totalMotorcycles} suffix=" Unit" />
+              <AnimatedCounter value={totalMotorcycles} suffix=" Motor" />
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
-              Dari <span className="text-indigo-300 font-semibold">{reports.length} hari</span> pencatatan
+            <p className="text-[11px] text-slate-400 mt-1 font-medium">
+              Rata-rata {averageDaily} unit / hari
             </p>
-          </SpotlightCard>
+          </M3Card>
 
-          {/* Card 3: Rata-rata & Okupansi */}
-          <SpotlightCard className="p-5 border-white/10 relative group sm:col-span-2 lg:col-span-1" spotlightColor="rgba(217, 70, 239, 0.2)">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Rata-rata / Okupansi
+          {/* Average Occupancy */}
+          <M3Card level="container" className="p-5 border-l-4 border-l-amber-500 relative overflow-hidden group">
+            <div className="flex justify-between items-start mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Rata-rata Okupansi
               </span>
-              <div className="w-10 h-10 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30">
-                <Percent className="w-5 h-5" />
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center">
+                <Percent className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              {averageDaily} <span className="text-base font-normal text-slate-400">Unit / hari</span>
+            <div className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-baseline gap-2">
+              <AnimatedCounter value={averageOccupancy} suffix="%" />
+              <span className="text-xs font-semibold text-amber-300">
+                ({averageDaily}/100)
+              </span>
             </div>
-            <div className="w-full bg-slate-800 rounded-full h-1.5 mt-2.5 overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-700" 
-                style={{ width: `${averageOccupancy}%` }}
-              />
-            </div>
-            <p className="text-[11px] text-purple-300 font-medium mt-1">
-              {averageOccupancy}% Tingkat Kepadatan Kapasitas
+            <p className="text-[11px] text-slate-400 mt-1 font-medium">
+              Kapasitas maksimal 100 motor
             </p>
-          </SpotlightCard>
+          </M3Card>
         </div>
 
-        {/* Dynamic Interactive Chart */}
-        <SpotlightCard className="p-5 sm:p-6 border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.4)]">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
+        {/* Analytics Chart Container */}
+        <M3Card level="container" className="p-5 sm:p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
             <div>
-              <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                <Activity className="w-4 h-4 text-indigo-400" />
-                Tren Harian Kapasitas & Pendapatan
-              </h3>
-              <p className="text-xs text-slate-400">
-                Grafik visual performa parkir motor pabrik
+              <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-m3-primary" />
+                Tren Arus Motor & Pemasukan
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Visualisasi dinamika parkir harian di pabrik Jepara
               </p>
             </div>
 
-            {/* Chart toggle switch */}
-            <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-white/10 self-start sm:self-auto">
+            {/* Toggle Bar / Area */}
+            <div className="flex items-center gap-1 bg-m3-surface-low p-1 rounded-xl border border-white/[0.06]">
               <button
-                onClick={() => setChartType('motor')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  chartType === 'motor'
-                    ? 'bg-indigo-600 text-white shadow-md'
+                onClick={() => setChartType('bar')}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  chartType === 'bar'
+                    ? 'bg-m3-primary-container text-m3-on-primary-container shadow-xs'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Jumlah Motor
+                Grafik Batang
               </button>
               <button
-                onClick={() => setChartType('revenue')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  chartType === 'revenue'
-                    ? 'bg-emerald-600 text-white shadow-md'
+                onClick={() => setChartType('area')}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  chartType === 'area'
+                    ? 'bg-m3-primary-container text-m3-on-primary-container shadow-xs'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Pendapatan (Rp)
+                Grafik Area
               </button>
             </div>
           </div>
 
-          <div className="h-[280px] sm:h-[340px] w-full">
-            {loading ? (
-              <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-                <span className="text-xs text-slate-400">Memuat data grafik...</span>
-              </div>
-            ) : chartData.length > 0 ? (
+          {loading ? (
+            <div className="h-64 flex flex-col items-center justify-center text-slate-400 gap-2">
+              <Loader2 className="w-6 h-6 animate-spin text-m3-primary" />
+              <span className="text-xs">Memuat data grafik...</span>
+            </div>
+          ) : chartData.length === 0 ? (
+            <div className="h-64 flex flex-col items-center justify-center text-slate-400 gap-2 border border-dashed border-white/10 rounded-2xl">
+              <Activity className="w-8 h-8 opacity-40 text-m3-primary" />
+              <span className="text-sm font-medium">Belum ada data pada rentang tanggal ini.</span>
+              <button
+                onClick={() => handleShortcut('all')}
+                className="mt-1 px-3 py-1.5 rounded-xl bg-m3-surface-high hover:bg-m3-surface-highest text-xs text-m3-primary font-semibold transition-all"
+              >
+                Tampilkan Semua Waktu
+              </button>
+            </div>
+          ) : (
+            <div className="h-72 sm:h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                {chartType === 'motor' ? (
+                {chartType === 'bar' ? (
                   <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
-                      <linearGradient id="motorGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#818cf8" stopOpacity={0.9} />
-                        <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.4} />
+                      <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#8ab4f8" stopOpacity={1} />
+                        <stop offset="100%" stopColor="#1a73e8" stopOpacity={0.7} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.06)" />
-                    <XAxis 
-                      dataKey="name" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fill: '#94a3b8', fontSize: 11 }} 
-                      dy={8} 
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fill: '#94a3b8', fontSize: 11 }} 
-                      domain={[0, (dataMax) => Math.max(100, dataMax + 10)]}
-                    />
-                    <RechartsTooltip
-                      cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+                    <CartesianGrid strokeDasharray="3 3" stroke="#242a33" vertical={false} />
+                    <XAxis dataKey="name" stroke="#8c9199" fontSize={11} tickLine={false} />
+                    <YAxis stroke="#8c9199" fontSize={11} tickLine={false} />
+                    <Tooltip
                       content={({ active, payload }) => {
                         if (active && payload && payload.length) {
                           const data = payload[0].payload;
                           return (
-                            <div className="glass-panel p-3 rounded-xl border border-indigo-500/30 shadow-2xl text-xs">
-                              <p className="font-bold text-white mb-1">{data.dateFull}</p>
-                              <p className="text-indigo-300 font-semibold">
-                                Total Motor: <span className="text-white font-bold">{data.Motor} Unit</span>
-                              </p>
-                              <p className="text-emerald-300 font-semibold mt-0.5">
-                                Pendapatan: <span className="text-white font-bold">Rp {data.Pendapatan.toLocaleString('id-ID')}</span>
+                            <div className="bg-m3-surface-high p-3 rounded-xl border border-white/15 shadow-2xl text-xs">
+                              <p className="font-bold text-white mb-1.5">{data.dateFull}</p>
+                              <p className="text-m3-primary font-semibold">🏍️ {data.Motor} Motor</p>
+                              <p className="text-m3-tertiary font-bold mt-0.5">
+                                💰 Rp {data.Pendapatan.toLocaleString('id-ID')}
                               </p>
                             </div>
                           );
@@ -484,42 +466,29 @@ const AdminDashboard = () => {
                         return null;
                       }}
                     />
-                    <Bar dataKey="Motor" fill="url(#motorGradient)" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="Motor" fill="url(#barGradient)" radius={[8, 8, 0, 0]} maxBarSize={45} />
                   </BarChart>
                 ) : (
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
-                      <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#10b981" stopOpacity={0.5} />
-                        <stop offset="100%" stopColor="#10b981" stopOpacity={0.0} />
+                      <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#8ab4f8" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="#1a73e8" stopOpacity={0.0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.06)" />
-                    <XAxis 
-                      dataKey="name" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fill: '#94a3b8', fontSize: 11 }} 
-                      dy={8} 
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fill: '#94a3b8', fontSize: 11 }}
-                      tickFormatter={(val) => `Rp ${(val / 1000)}k`}
-                    />
-                    <RechartsTooltip
+                    <CartesianGrid strokeDasharray="3 3" stroke="#242a33" vertical={false} />
+                    <XAxis dataKey="name" stroke="#8c9199" fontSize={11} tickLine={false} />
+                    <YAxis stroke="#8c9199" fontSize={11} tickLine={false} />
+                    <Tooltip
                       content={({ active, payload }) => {
                         if (active && payload && payload.length) {
                           const data = payload[0].payload;
                           return (
-                            <div className="glass-panel p-3 rounded-xl border border-emerald-500/30 shadow-2xl text-xs">
-                              <p className="font-bold text-white mb-1">{data.dateFull}</p>
-                              <p className="text-emerald-300 font-semibold">
-                                Total: Rp {data.Pendapatan.toLocaleString('id-ID')}
-                              </p>
-                              <p className="text-slate-300 mt-0.5">
-                                {data.Motor} unit motor terparkir
+                            <div className="bg-m3-surface-high p-3 rounded-xl border border-white/15 shadow-2xl text-xs">
+                              <p className="font-bold text-white mb-1.5">{data.dateFull}</p>
+                              <p className="text-m3-primary font-semibold">🏍️ {data.Motor} Motor</p>
+                              <p className="text-m3-tertiary font-bold mt-0.5">
+                                💰 Rp {data.Pendapatan.toLocaleString('id-ID')}
                               </p>
                             </div>
                           );
@@ -527,220 +496,215 @@ const AdminDashboard = () => {
                         return null;
                       }}
                     />
-                    <Area 
-                      type="monotone" 
-                      dataKey="Pendapatan" 
-                      stroke="#10b981" 
-                      strokeWidth={2.5} 
-                      fill="url(#revenueGradient)" 
+                    <Area
+                      type="monotone"
+                      dataKey="Motor"
+                      stroke="#8ab4f8"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#areaGradient)"
                     />
                   </AreaChart>
                 )}
               </ResponsiveContainer>
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-slate-500 text-xs">
-                <Bike className="w-10 h-10 opacity-30" />
-                <span>Tidak ada data laporan untuk rentang tanggal ini.</span>
-              </div>
-            )}
-          </div>
-        </SpotlightCard>
+            </div>
+          )}
+        </M3Card>
 
-        {/* Riwayat Laporan Section */}
-        <SpotlightCard className="p-5 sm:p-6 border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.4)]">
-          <div className="flex items-center justify-between mb-5">
+        {/* History Table & Cards Section */}
+        <M3Card level="container" className="p-5 sm:p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3">
             <div>
-              <h3 className="text-base sm:text-lg font-bold text-white">
-                Riwayat & Bukti Lapangan
-              </h3>
-              <p className="text-xs text-slate-400">
-                Total {reports.length} data laporan tercatat
+              <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <Layers className="w-5 h-5 text-m3-primary" />
+                Daftar Riwayat Shift Kerja
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Menampilkan {reports.length} catatan parkir yang tersimpan
               </p>
             </div>
 
-            {/* View Mode Toggle for Mobile / Desktop */}
-            <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-white/10">
-              <button
-                onClick={() => setViewMode('cards')}
-                className={`p-1.5 rounded-lg text-xs transition-all ${
-                  viewMode === 'cards' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
-                }`}
-                title="Tampilan Kartu (Cocok untuk HP)"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
+            {/* View Mode Switcher */}
+            <div className="flex items-center gap-1 bg-m3-surface-low p-1 rounded-xl border border-white/[0.06]">
               <button
                 onClick={() => setViewMode('table')}
-                className={`p-1.5 rounded-lg text-xs transition-all ${
-                  viewMode === 'table' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+                className={`p-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  viewMode === 'table'
+                    ? 'bg-m3-primary-container text-m3-on-primary-container shadow-xs'
+                    : 'text-slate-400 hover:text-white'
                 }`}
-                title="Tampilan Tabel (Desktop)"
+                title="Tampilan Tabel Data"
               >
-                <LayoutList className="w-4 h-4" />
+                <TableIcon className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Tabel</span>
+              </button>
+              <button
+                onClick={() => setViewMode('cards')}
+                className={`p-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  viewMode === 'cards'
+                    ? 'bg-m3-primary-container text-m3-on-primary-container shadow-xs'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="Tampilan Kartu Foto"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Kartu</span>
               </button>
             </div>
           </div>
 
-          {/* Cards View (Super Mobile Friendly) */}
-          {viewMode === 'cards' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              {reports.map((report) => (
-                <div 
-                  key={report.id}
-                  className="glass-card rounded-2xl p-4 border border-white/10 hover:border-indigo-500/40 transition-all group flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-2.5">
-                      <span className="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 font-bold text-xs border border-indigo-500/30">
-                        {format(new Date(report.date), 'dd MMM yyyy')}
-                      </span>
-                      <span className="text-sm font-black text-emerald-400">
-                        Rp {report.total_revenue.toLocaleString('id-ID')}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-semibold text-white">
-                        {report.total_motorcycles} Unit Motor
-                      </span>
-                      <span className="text-[10px] text-slate-500">
-                        ({Math.round((report.total_motorcycles / 100) * 100)}% Kapasitas)
-                      </span>
-                    </div>
-
-                    {report.notes && (
-                      <p className="text-xs text-slate-300 bg-slate-950/40 p-2.5 rounded-xl border border-white/5 mb-3 italic">
-                        "{report.notes}"
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Card Bottom Actions */}
-                  <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                    {report.photo_path ? (
-                      <button
-                        onClick={() => setSelectedPhoto(getImageSrc(report.photo_path))}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
-                      >
-                        <ImageIcon className="w-3.5 h-3.5" />
-                        <span>Lihat Bukti Foto</span>
-                      </button>
-                    ) : (
-                      <span className="text-[11px] text-slate-500 italic">Tanpa lampiran foto</span>
-                    )}
-
-                    <button
-                      onClick={(e) => handleDelete(report.id, e)}
-                      className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                      title="Hapus data"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              {reports.length === 0 && !loading && (
-                <div className="col-span-full py-12 text-center text-slate-500 text-xs sm:text-sm">
-                  Tidak ada riwayat laporan ditemukan.
-                </div>
-              )}
+          {loading ? (
+            <div className="py-16 flex flex-col items-center justify-center text-slate-400 gap-2">
+              <Loader2 className="w-6 h-6 animate-spin text-m3-primary" />
+              <span className="text-xs">Memuat riwayat data...</span>
             </div>
-          ) : (
-            /* Table View */
-            <div className="overflow-x-auto rounded-2xl border border-white/10">
-              <table className="w-full text-left text-xs sm:text-sm">
-                <thead className="bg-slate-950/80 text-slate-400 uppercase tracking-wider text-[11px]">
+          ) : reports.length === 0 ? (
+            <div className="py-16 text-center text-slate-400 text-sm">
+              Tidak ada data laporan yang ditemukan.
+            </div>
+          ) : viewMode === 'table' ? (
+            /* Modern Google Looker Data Table */
+            <div className="overflow-x-auto rounded-2xl border border-white/[0.08]">
+              <table className="w-full text-left text-xs sm:text-sm border-collapse">
+                <thead className="bg-m3-surface-high text-slate-300 uppercase tracking-wider text-[11px] font-bold">
                   <tr>
-                    <th className="px-4 py-3 font-semibold">Tanggal</th>
-                    <th className="px-4 py-3 font-semibold">Jumlah Motor</th>
-                    <th className="px-4 py-3 font-semibold">Pendapatan</th>
-                    <th className="px-4 py-3 font-semibold">Catatan</th>
-                    <th className="px-4 py-3 font-semibold text-center">Foto</th>
-                    <th className="px-4 py-3 font-semibold text-center">Aksi</th>
+                    <th className="py-3 px-4">Tanggal</th>
+                    <th className="py-3 px-4">Motor</th>
+                    <th className="py-3 px-4">Pemasukan</th>
+                    <th className="py-3 px-4">Foto Bukti</th>
+                    <th className="py-3 px-4">Catatan</th>
+                    <th className="py-3 px-4 text-right">Aksi</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 text-slate-200">
+                <tbody className="divide-y divide-white/[0.05]">
                   {reports.map((report) => (
-                    <tr key={report.id} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="px-4 py-3.5 whitespace-nowrap font-medium text-white">
-                        {format(new Date(report.date), 'dd MMM yyyy')}
+                    <tr key={report.id} className="hover:bg-m3-surface-high/40 transition-colors">
+                      <td className="py-3 px-4 font-semibold text-white whitespace-nowrap">
+                        {format(new Date(report.date), 'dd MMMM yyyy', { locale: id })}
                       </td>
-                      <td className="px-4 py-3.5">
-                        <span className="font-semibold text-indigo-300">{report.total_motorcycles}</span>
-                        <span className="text-[10px] text-slate-500 ml-1">/100</span>
+                      <td className="py-3 px-4 font-bold text-m3-primary whitespace-nowrap">
+                        {report.total_motorcycles} Unit
                       </td>
-                      <td className="px-4 py-3.5 font-bold text-emerald-400">
-                        Rp {report.total_revenue.toLocaleString('id-ID')}
+                      <td className="py-3 px-4 font-bold text-m3-tertiary whitespace-nowrap">
+                        Rp {report.total_revenue?.toLocaleString('id-ID')}
                       </td>
-                      <td className="px-4 py-3.5 text-slate-400 max-w-xs truncate">
-                        {report.notes || '-'}
-                      </td>
-                      <td className="px-4 py-3.5 text-center">
+                      <td className="py-3 px-4">
                         {report.photo_path ? (
                           <button
-                            onClick={() => setSelectedPhoto(getImageSrc(report.photo_path))}
-                            className="inline-flex items-center justify-center p-1.5 rounded-xl bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 transition-all border border-indigo-500/30"
-                            title="Lihat Foto Lapangan"
+                            onClick={() => setPreviewPhoto(getImageSrc(report.photo_path))}
+                            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/15 hover:bg-blue-500/30 text-m3-primary border border-blue-500/30 text-xs font-semibold transition-all"
                           >
-                            <ImageIcon className="w-4 h-4" />
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Lihat</span>
                           </button>
                         ) : (
-                          <span className="text-slate-600">-</span>
+                          <span className="text-slate-500 text-xs">-</span>
                         )}
                       </td>
-                      <td className="px-4 py-3.5 text-center">
+                      <td className="py-3 px-4 text-slate-300 max-w-xs truncate">
+                        {report.notes || '-'}
+                      </td>
+                      <td className="py-3 px-4 text-right">
                         <button
                           onClick={(e) => handleDelete(report.id, e)}
-                          className="inline-flex items-center justify-center p-1.5 rounded-xl text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                          title="Hapus"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                          title="Hapus data"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </td>
                     </tr>
                   ))}
-                  {reports.length === 0 && !loading && (
-                    <tr>
-                      <td colSpan="6" className="px-4 py-10 text-center text-slate-500 text-xs">
-                        Tidak ada data laporan.
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
             </div>
+          ) : (
+            /* Cards Grid View */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {reports.map((report) => (
+                <M3Card key={report.id} level="low" className="p-4 flex flex-col justify-between overflow-hidden">
+                  <div>
+                    {report.photo_path ? (
+                      <div 
+                        onClick={() => setPreviewPhoto(getImageSrc(report.photo_path))}
+                        className="relative h-36 rounded-xl overflow-hidden mb-3 cursor-pointer group bg-m3-surface-container"
+                      >
+                        <img
+                          src={getImageSrc(report.photo_path)}
+                          alt="Foto Parkir"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Eye className="w-6 h-6 text-white" />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-20 rounded-xl bg-m3-surface-container flex items-center justify-center text-slate-500 text-xs mb-3 border border-white/[0.04]">
+                        Tidak ada foto
+                      </div>
+                    )}
+
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-bold text-white text-sm">
+                        {format(new Date(report.date), 'dd MMM yyyy')}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-m3-primary text-xs font-bold">
+                        {report.total_motorcycles} Unit
+                      </span>
+                    </div>
+
+                    <div className="text-lg font-black text-m3-tertiary mb-2">
+                      Rp {report.total_revenue?.toLocaleString('id-ID')}
+                    </div>
+
+                    {report.notes && (
+                      <p className="text-xs text-slate-400 bg-m3-surface-container p-2.5 rounded-xl border border-white/[0.04] mb-3">
+                        {report.notes}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end pt-2 border-t border-white/[0.05]">
+                    <button
+                      onClick={(e) => handleDelete(report.id, e)}
+                      className="text-xs text-red-400/80 hover:text-red-400 flex items-center gap-1 font-semibold"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Hapus
+                    </button>
+                  </div>
+                </M3Card>
+              ))}
+            </div>
           )}
-        </SpotlightCard>
+        </M3Card>
       </div>
 
-      {/* Fullscreen Photo Lightbox Modal */}
-      {selectedPhoto && (
+      {/* Lightbox Photo Modal */}
+      {previewPhoto && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in"
-          onClick={() => setSelectedPhoto(null)}
+          className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setPreviewPhoto(null)}
         >
           <div 
-            className="relative max-w-2xl w-full bg-slate-900 rounded-3xl p-3 border border-white/20 shadow-2xl"
+            className="relative max-w-3xl w-full bg-m3-surface-container rounded-3xl overflow-hidden border border-white/15 shadow-2xl p-2"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-2 px-2 border-b border-white/10 mb-2">
-              <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                <ImageIcon className="w-4 h-4 text-indigo-400" />
-                Bukti Foto Kondisi Lapangan
-              </span>
+            <div className="flex justify-between items-center px-4 py-3 border-b border-white/[0.08]">
+              <span className="text-xs font-bold text-slate-300">Foto Bukti Lapangan (Cloudinary)</span>
               <button
-                onClick={() => setSelectedPhoto(null)}
-                className="p-1.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                onClick={() => setPreviewPhoto(null)}
+                className="p-1.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <img 
-              src={selectedPhoto} 
-              alt="Bukti Lapangan" 
-              className="w-full max-h-[75vh] object-contain rounded-2xl bg-black/40"
-            />
+            <div className="p-2">
+              <img
+                src={previewPhoto}
+                alt="Fullscreen Bukti Parkir"
+                className="w-full max-h-[75vh] object-contain rounded-2xl"
+              />
+            </div>
           </div>
         </div>
       )}

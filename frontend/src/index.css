@@ -7,65 +7,110 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white font-sans;
+    @apply bg-m3-surface text-slate-100 antialiased selection:bg-m3-primary selection:text-m3-on-primary font-sans;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Google Material 3 Style */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+  background: #15191f;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.4);
+  background: #43474e;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.7);
+  background: #8c9199;
 }
 
-/* Glassmorphism helpers */
-.glass-panel {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+/* Google Stitch / Material 3 Surface Classes */
+.m3-surface-low {
+  background-color: #15191f;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.m3-surface-card {
+  background-color: #1c2128;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.m3-surface-high {
+  background-color: #242a33;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.glass-card {
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glass-input {
-  background: rgba(15, 23, 42, 0.5);
+.m3-surface-highest {
+  background-color: #2e3540;
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
-.glass-input:focus {
-  border-color: rgba(129, 140, 248, 0.8);
-  box-shadow: 0 0 15px rgba(99, 102, 241, 0.35);
+
+/* Material 3 Input */
+.m3-input {
+  background-color: #15191f;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.m3-input:focus {
+  background-color: #1c2128;
+  border-color: #8ab4f8;
+  box-shadow: 0 0 0 3px rgba(138, 180, 248, 0.2);
+  outline: none;
+}
+
+/* Material 3 Filled Tonal Button */
+.m3-button-tonal {
+  background-color: #242a33;
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.m3-button-tonal:hover {
+  background-color: #2e3540;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+.m3-button-tonal:active {
+  transform: scale(0.96);
+  background-color: #353940;
+}
+
+/* Material 3 Primary Filled Button */
+.m3-button-primary {
+  background: linear-gradient(135deg, #1a73e8 0%, #3b82f6 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(26, 115, 232, 0.35);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.m3-button-primary:hover {
+  background: linear-gradient(135deg, #1e88e5 0%, #60a5fa 100%);
+  box-shadow: 0 6px 24px rgba(26, 115, 232, 0.5);
+}
+.m3-button-primary:active {
+  transform: scale(0.98);
 }
 
 /* React Datepicker Dark Theme Override */
 .react-datepicker {
-  background-color: #0f172a !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  border-radius: 1rem !important;
+  background-color: #1c2128 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 1.25rem !important;
   font-family: inherit !important;
   color: #f8fafc !important;
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5) !important;
+  box-shadow: 0 24px 38px 3px rgba(0, 0, 0, 0.6) !important;
 }
 .react-datepicker__header {
-  background-color: #1e293b !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-top-left-radius: 1rem !important;
-  border-top-right-radius: 1rem !important;
+  background-color: #15191f !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-top-left-radius: 1.25rem !important;
+  border-top-right-radius: 1.25rem !important;
+  padding-top: 12px !important;
 }
 .react-datepicker__current-month, .react-datepicker-time__header, .react-datepicker-year-header {
   color: #e2e8f0 !important;
@@ -76,18 +121,19 @@
 }
 .react-datepicker__day {
   color: #cbd5e1 !important;
-  border-radius: 0.5rem !important;
+  border-radius: 9999px !important;
+  margin: 2px !important;
 }
 .react-datepicker__day:hover {
-  background-color: #334155 !important;
+  background-color: #2e3540 !important;
   color: #ffffff !important;
 }
 .react-datepicker__day--selected, .react-datepicker__day--in-range, .react-datepicker__day--in-selecting-range {
-  background-color: #6366f1 !important;
+  background-color: #1a73e8 !important;
   color: #ffffff !important;
 }
 .react-datepicker__day--keyboard-selected {
-  background-color: #4f46e5 !important;
+  background-color: #0842a0 !important;
 }
 .react-datepicker__navigation-icon::before {
   border-color: #94a3b8 !important;
