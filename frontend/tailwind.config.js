@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -18,11 +19,25 @@ export default {
           'surface-container': '#1c2128',
           'surface-high': '#242a33',
           'surface-highest': '#2e3540',
+          
+          // Light Mode Material 3 Surface Tokens
+          'light-surface': '#f8f9fa',
+          'light-surface-low': '#f1f3f4',
+          'light-surface-container': '#ffffff',
+          'light-surface-high': '#e8eaed',
+          'light-surface-highest': '#dadce0',
+
           primary: '#8ab4f8',
           'primary-hover': '#a8c7fa',
           'primary-container': '#0842a0',
           'on-primary': '#002d6c',
           'on-primary-container': '#d3e3fd',
+
+          // Light Mode Primary
+          'light-primary': '#1a73e8',
+          'light-primary-container': '#d2e3fc',
+          'light-on-primary-container': '#0d47a1',
+
           secondary: '#c2e7ff',
           'secondary-container': '#004a77',
           'on-secondary-container': '#c2e7ff',
