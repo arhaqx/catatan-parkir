@@ -47,7 +47,7 @@ import { useTheme } from '../context/ThemeContext';
 
 const STANDARD_PARKING_CAPACITY = 100; // Kapasitas standar 100 motor
 const MAX_EMERGENCY_CAPACITY = 130; // Batas darurat 130 motor
-const DEFAULT_ADMIN_PIN = '1234'; // PIN default admin
+const DEFAULT_ADMIN_PIN = '1312'; // PIN rahasia admin
 
 const AdminDashboard = () => {
   const { isDark } = useTheme();
@@ -153,7 +153,7 @@ const AdminDashboard = () => {
 
   const handleVerifyPinAndProceed = async (e) => {
     e.preventDefault();
-    if (adminPinInput === DEFAULT_ADMIN_PIN || adminPinInput === 'admin123') {
+    if (adminPinInput === DEFAULT_ADMIN_PIN) {
       setIsAdminUnlocked(true);
       setShowPinModal(false);
       if (deleteTargetId) {
@@ -821,7 +821,7 @@ const AdminDashboard = () => {
                     setAdminPinInput(e.target.value);
                     setPinError('');
                   }}
-                  placeholder="Ketik PIN Admin (Default: 1234)"
+                  placeholder="Masukkan PIN Admin"
                   autoFocus
                   className="w-full m3-input text-center text-lg font-bold rounded-2xl py-3 focus:outline-none tracking-widest"
                 />
