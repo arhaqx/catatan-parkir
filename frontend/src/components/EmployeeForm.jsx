@@ -423,7 +423,7 @@ const EmployeeForm = () => {
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Contoh: Parkiran ramai overload jam 07.30, motor diselip paralel di lorong depan aman..."
+              placeholder="Contoh: parkirane rameee puuuolll"
               rows="2"
               className="w-full m3-input placeholder:text-slate-400 text-xs sm:text-sm rounded-2xl px-4 py-3 resize-none font-normal"
             />
