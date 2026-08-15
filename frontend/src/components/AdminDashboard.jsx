@@ -138,35 +138,31 @@ const AdminDashboard = () => {
     }
   };
 
-  // Trigger Delete with Admin Verification
+  // Trigger Delete with Admin Verification - Selalu minta PIN setiap hapus
   const requestDelete = (id, e) => {
     e?.stopPropagation();
-    if (isAdminUnlocked) {
-      executeDelete(id);
-    } else {
-      setDeleteTargetId(id);
-      setAdminPinInput('');
-      setPinError('');
-      setShowPinModal(true);
-    }
+    setDeleteTargetId(id);
+    setAdminPinInput('');
+    setPinError('');
+    setShowPinModal(true);
   };
 
   const handleVerifyPinAndProceed = async (e) => {
     e.preventDefault();
     if (adminPinInput === DEFAULT_ADMIN_PIN) {
-      setIsAdminUnlocked(true);
+      const targetId = deleteTargetId;
       setShowPinModal(false);
-      if (deleteTargetId) {
-        await executeDelete(deleteTargetId);
+      setAdminPinInput('');
+      setDeleteTargetId(null);
+      if (targetId) {
+        await executeDelete(targetId);
       }
     } else {
-      setPinError('PIN Admin salah! Akses hapus hanya untuk pemilik.');
+      setPinError('PIN Admin salah! Akses hapus ditolak.');
     }
   };
 
   const executeDelete = async (id) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus data laporan ini secara permanen?')) return;
-
     try {
       await deleteReport(id);
       setReports((prev) => prev.filter((r) => r.id !== id));
