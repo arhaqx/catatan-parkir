@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import React, { useState, useEffect, useMemo } from 'react';
+import { format, getDay } from 'date-fns';
+import { id } from 'date-fns/locale';
 import { 
   Camera, 
   Send, 
@@ -12,7 +13,10 @@ import {
   Trash2, 
   Bike,
   Sparkles,
-  AlertTriangle
+  AlertTriangle,
+  Zap,
+  Coffee,
+  Building2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { createReport } from '../api';
@@ -37,6 +41,57 @@ const EmployeeForm = () => {
   const revenue = motorcycles * RATE_PER_MOTORCYCLE;
   const isOverload = motorcycles > STANDARD_CAPACITY;
   const extraMotors = Math.max(0, motorcycles - STANDARD_CAPACITY);
+
+  // Day of Week Analysis (0 = Minggu/Libur, 6 = Sabtu/Lembur, 1-5 = Senin-Jumat/Reguler)
+  const daySchedule = useMemo(() => {
+    try {
+      const selectedDate = new Date(date + 'T00:00:00');
+      const dayNum = getDay(selectedDate);
+      const dayName = format(selectedDate, 'EEEE', { locale: id });
+
+      if (dayNum === 0) {
+        return {
+          type: 'sunday',
+          name: dayName,
+          title: 'Hari Minggu • Libur Operasional Pabrik',
+          chip: 'Libur Minggu',
+          chipColor: 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30',
+          notice: 'Pabrik libur operasional di hari Minggu. Jika ada lemburan shift khusus, catatan parkir tetap bisa dikirim.',
+          icon: Coffee
+        };
+      } else if (dayNum === 6) {
+        return {
+          type: 'saturday',
+          name: dayName,
+          title: 'Hari Sabtu • Shift Lembur Pabrik Aktif',
+          chip: 'Shift Lembur',
+          chipColor: 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/40',
+          notice: 'Jadwal lemburan pabrik hari Sabtu aktif! Parkiran melayani kendaraan karyawan shift lembur.',
+          icon: Zap
+        };
+      } else {
+        return {
+          type: 'weekday',
+          name: dayName,
+          title: `Hari ${dayName} • Shift Kerja Reguler`,
+          chip: 'Shift Reguler',
+          chipColor: 'bg-blue-100 dark:bg-m3-primary-container/60 text-blue-800 dark:text-m3-primary border-blue-200 dark:border-m3-primary/30',
+          notice: null,
+          icon: Building2
+        };
+      }
+    } catch {
+      return {
+        type: 'weekday',
+        name: '',
+        title: 'Shift Kerja',
+        chip: 'Shift Kerja',
+        chipColor: 'bg-blue-100 dark:bg-m3-primary-container/60 text-blue-800 dark:text-m3-primary border-blue-200 dark:border-m3-primary/30',
+        notice: null,
+        icon: Building2
+      };
+    }
+  }, [date]);
 
   // Cleanup object URL
   useEffect(() => {
@@ -113,7 +168,7 @@ const EmployeeForm = () => {
       await createReport(formData);
       setStatus({ 
         type: 'success', 
-        message: `Laporan tanggal ${format(new Date(date), 'dd MMM yyyy')} (${motorcycles} motor) berhasil tersimpan!` 
+        message: `Laporan ${daySchedule.name} (${format(new Date(date), 'dd MMM yyyy')}) - ${motorcycles} motor berhasil tersimpan!` 
       });
       triggerConfetti();
       
@@ -130,6 +185,8 @@ const EmployeeForm = () => {
     }
   };
 
+  const ScheduleIcon = daySchedule.icon;
+
   return (
     <AuroraBackground className="flex flex-col items-center justify-start pb-28 pt-4 px-3 sm:px-6">
       {/* Top Google Stitch App Bar */}
@@ -140,8 +197,9 @@ const EmployeeForm = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-m3-primary bg-blue-100 dark:bg-m3-primary-container/60 px-2 py-0.5 rounded-md">
-                Shift Kerja
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${daySchedule.chipColor} flex items-center gap-1`}>
+                <ScheduleIcon className="w-3 h-3" />
+                {daySchedule.chip}
               </span>
               <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Jepara</span>
             </div>
@@ -191,12 +249,17 @@ const EmployeeForm = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Tanggal Input */}
+          {/* Tanggal Input & Dynamic Day Schedule Badge */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1 flex items-center gap-1.5">
-              <CalendarIcon className="w-3.5 h-3.5 text-blue-600 dark:text-m3-primary" />
-              <span>Tanggal Laporan</span>
-            </label>
+            <div className="flex items-center justify-between ml-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <CalendarIcon className="w-3.5 h-3.5 text-blue-600 dark:text-m3-primary" />
+                <span>Tanggal Laporan</span>
+              </label>
+              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border ${daySchedule.chipColor}`}>
+                {daySchedule.title}
+              </span>
+            </div>
             <input
               type="date"
               value={date}
@@ -204,6 +267,18 @@ const EmployeeForm = () => {
               className="w-full m3-input rounded-2xl px-4 py-3 text-sm font-medium"
               required
             />
+
+            {/* Sunday / Saturday Special Notice */}
+            {daySchedule.notice && (
+              <p className={`text-[11px] font-medium px-3 py-1.5 rounded-xl border mt-1 flex items-center gap-1.5 ${
+                daySchedule.type === 'sunday' 
+                  ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30'
+                  : 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
+              }`}>
+                <ScheduleIcon className="w-3.5 h-3.5 shrink-0" />
+                <span>{daySchedule.notice}</span>
+              </p>
+            )}
           </div>
 
           {/* Interactive Capacity Gauge & Quick Steppers */}
@@ -319,7 +394,7 @@ const EmployeeForm = () => {
           <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 dark:from-[#0d2a4a] dark:via-[#112338] dark:to-[#15191f] text-white border border-blue-500/30 flex justify-between items-center shadow-md">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-blue-200 dark:text-m3-primary block">
-                Total Pemasukan
+                Total Pemasukan ({daySchedule.chip})
               </span>
               <span className="text-[11px] text-slate-300 dark:text-slate-400 font-medium">
                 Tarif Rp 3.000 × {motorcycles} motor {isOverload && `(termasuk +${extraMotors} motor ekstra)`}

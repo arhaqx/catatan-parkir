@@ -5,7 +5,8 @@ const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 const db = require('../database');
 const exceljs = require('exceljs');
-const { format, subDays } = require('date-fns');
+const { format, subDays, getDay } = require('date-fns');
+const { id } = require('date-fns/locale');
 
 // Konfigurasi Cloudinary dari file .env
 cloudinary.config({
@@ -197,7 +198,8 @@ router.get('/export', async (req, res) => {
         worksheet.columns = [
             { header: 'No', key: 'no', width: 8 },
             { header: 'ID', key: 'id', width: 10 },
-            { header: 'Tanggal', key: 'date', width: 16 },
+            { header: 'Tanggal', key: 'date', width: 24 },
+            { header: 'Jadwal Shift', key: 'shift_type', width: 18 },
             { header: 'Total Motor', key: 'total_motorcycles', width: 16 },
             { header: 'Status Kapasitas', key: 'status_capacity', width: 22 },
             { header: 'Tarif/Unit', key: 'rate', width: 14 },
@@ -220,10 +222,23 @@ router.get('/export', async (req, res) => {
             const extra = Math.max(0, count - 100);
             const statusStr = isOver ? `⚠️ Overload (+${extra} Motor)` : `Normal (${Math.round((count / 100) * 100)}%)`;
 
+            let shiftLabel = '🏢 Reguler';
+            let formattedDate = row.date;
+            try {
+                const d = new Date(row.date + 'T00:00:00');
+                const dayNum = getDay(d);
+                if (dayNum === 6) shiftLabel = '⚡ Lembur Sabtu';
+                else if (dayNum === 0) shiftLabel = '🛑 Libur Minggu';
+                formattedDate = format(d, 'EEEE, dd/MM/yyyy', { locale: id });
+            } catch (err) {
+                // fallback
+            }
+
             worksheet.addRow({
                 no: idx + 1,
                 id: row.id,
-                date: row.date,
+                date: formattedDate,
+                shift_type: shiftLabel,
                 total_motorcycles: count,
                 status_capacity: statusStr,
                 rate: 3000,

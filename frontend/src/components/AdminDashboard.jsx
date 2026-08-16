@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { format, subDays, startOfWeek, startOfMonth } from 'date-fns';
+import { format, subDays, startOfWeek, startOfMonth, getDay } from 'date-fns';
 import { id } from 'date-fns/locale';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -36,7 +36,9 @@ import {
   Layers,
   Lock,
   AlertTriangle,
-  Zap
+  Zap,
+  Coffee,
+  Building2
 } from 'lucide-react';
 import { getReports, deleteReport, seedSampleReports, exportReportsToExcel, baseURL } from '../api';
 import AuroraBackground from './ui/AuroraBackground';
@@ -48,6 +50,49 @@ import { useTheme } from '../context/ThemeContext';
 const STANDARD_PARKING_CAPACITY = 100; // Kapasitas standar 100 motor
 const MAX_EMERGENCY_CAPACITY = 130; // Batas darurat 130 motor
 const DEFAULT_ADMIN_PIN = '1312'; // PIN rahasia admin
+
+// Helper for Schedule & Day Type
+const getDayMeta = (dateStr) => {
+  try {
+    const d = new Date(dateStr + 'T00:00:00');
+    const dayNum = getDay(d);
+    const dayName = format(d, 'EEEE', { locale: id });
+
+    if (dayNum === 0) {
+      return {
+        type: 'sunday',
+        name: dayName,
+        label: 'Libur Minggu',
+        icon: Coffee,
+        badgeClass: 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border-red-300 dark:border-red-500/40'
+      };
+    } else if (dayNum === 6) {
+      return {
+        type: 'saturday',
+        name: dayName,
+        label: 'Lembur Sabtu',
+        icon: Zap,
+        badgeClass: 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/40'
+      };
+    } else {
+      return {
+        type: 'weekday',
+        name: dayName,
+        label: 'Reguler',
+        icon: Building2,
+        badgeClass: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30'
+      };
+    }
+  } catch {
+    return {
+      type: 'weekday',
+      name: '',
+      label: 'Reguler',
+      icon: Building2,
+      badgeClass: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30'
+    };
+  }
+};
 
 const AdminDashboard = () => {
   const { isDark } = useTheme();
@@ -67,7 +112,6 @@ const AdminDashboard = () => {
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [adminPinInput, setAdminPinInput] = useState('');
   const [pinError, setPinError] = useState('');
-  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
 
   const showToast = (type, message) => {
@@ -197,7 +241,7 @@ const AdminDashboard = () => {
     }
   };
 
-  // Calculations based on 100 standard & overload tracking
+  // Calculations based on 100 standard & schedule tracking
   const totalRevenue = useMemo(() => {
     return reports.reduce((sum, r) => sum + (r.total_revenue || 0), 0);
   }, [reports]);
@@ -219,6 +263,16 @@ const AdminDashboard = () => {
     return reports.filter((r) => (r.total_motorcycles || 0) > STANDARD_PARKING_CAPACITY).length;
   }, [reports]);
 
+  const saturdayOvertimeCount = useMemo(() => {
+    return reports.filter((r) => {
+      try {
+        return getDay(new Date(r.date + 'T00:00:00')) === 6;
+      } catch {
+        return false;
+      }
+    }).length;
+  }, [reports]);
+
   const extraOverloadRevenue = useMemo(() => {
     return reports.reduce((sum, r) => {
       const extra = Math.max(0, (r.total_motorcycles || 0) - STANDARD_PARKING_CAPACITY);
@@ -234,14 +288,18 @@ const AdminDashboard = () => {
   const chartData = useMemo(() => {
     return [...reports]
       .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .map((r) => ({
-        name: format(new Date(r.date), 'dd MMM'),
-        Motor: r.total_motorcycles,
-        Pendapatan: r.total_revenue,
-        isOverload: (r.total_motorcycles || 0) > STANDARD_PARKING_CAPACITY,
-        extra: Math.max(0, (r.total_motorcycles || 0) - STANDARD_PARKING_CAPACITY),
-        dateFull: format(new Date(r.date), 'dd MMMM yyyy')
-      }));
+      .map((r) => {
+        const meta = getDayMeta(r.date);
+        return {
+          name: format(new Date(r.date + 'T00:00:00'), 'dd MMM'),
+          Motor: r.total_motorcycles,
+          Pendapatan: r.total_revenue,
+          isOverload: (r.total_motorcycles || 0) > STANDARD_PARKING_CAPACITY,
+          extra: Math.max(0, (r.total_motorcycles || 0) - STANDARD_PARKING_CAPACITY),
+          dayLabel: meta.label,
+          dateFull: `${meta.name}, ${format(new Date(r.date + 'T00:00:00'), 'dd MMMM yyyy', { locale: id })}`
+        };
+      });
   }, [reports]);
 
   return (
@@ -272,14 +330,14 @@ const AdminDashboard = () => {
               Admin Looker
             </span>
             <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              • Kapasitas Standar: 100 Motor • Overload: 130
+              • Operasional: Senin-Sabtu (Sabtu Lembur) • Minggu Libur
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
             Dashboard Analitik Parkir
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-0.5">
-            Pantau pemasukan, kapasitas normal vs overload, dan unduh laporan Excel
+            Pantau pemasukan, kapasitas normal vs overload, shift lembur Sabtu, dan unduh laporan Excel
           </p>
         </div>
 
@@ -374,7 +432,7 @@ const AdminDashboard = () => {
           </div>
         </M3Card>
 
-        {/* 3 Metric Cards - Standard 100 & Overload Insights */}
+        {/* 3 Metric Cards - Standard 100 & Schedule Insights */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Total Revenue */}
           <M3Card level="container" className="p-5 border-l-4 border-l-blue-500 relative overflow-hidden group">
@@ -412,8 +470,13 @@ const AdminDashboard = () => {
             <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               <AnimatedCounter value={totalMotorcycles} suffix=" Motor" />
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
-              Rata-rata {averageDaily} unit / hari
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium flex items-center gap-1">
+              <span>Rata-rata {averageDaily} unit / hari</span>
+              {saturdayOvertimeCount > 0 && (
+                <span className="text-amber-600 dark:text-amber-300 font-semibold">
+                  • {saturdayOvertimeCount}x Lembur Sabtu
+                </span>
+              )}
             </p>
           </M3Card>
 
@@ -447,7 +510,7 @@ const AdminDashboard = () => {
                   <Zap className="w-3 h-3" /> {overloadDaysCount} Hari Overload (&gt;100 Unit)
                 </span>
               ) : (
-                <span>Standar 100 • Darurat 130</span>
+                <span>Standar 100 • Overload 130</span>
               )}
             </p>
           </M3Card>
@@ -462,7 +525,7 @@ const AdminDashboard = () => {
                 Tren Arus Motor & Pemasukan
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Visualisasi dinamika parkir harian di pabrik Jepara (Garis batas standar 100 unit)
+                Dinamika parkir harian di pabrik Jepara (Senin-Jumat Reguler • Sabtu Lembur)
               </p>
             </div>
 
@@ -527,7 +590,10 @@ const AdminDashboard = () => {
                           const data = payload[0].payload;
                           return (
                             <div className="bg-white dark:bg-m3-surface-high p-3 rounded-xl border border-slate-200 dark:border-white/15 shadow-xl text-xs">
-                              <p className="font-bold text-slate-900 dark:text-white mb-1.5">{data.dateFull}</p>
+                              <p className="font-bold text-slate-900 dark:text-white mb-0.5">{data.dateFull}</p>
+                              <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 block mb-1.5">
+                                Shift: {data.dayLabel}
+                              </span>
                               <p className="text-blue-600 dark:text-m3-primary font-semibold">
                                 🏍️ {data.Motor} Motor {data.isOverload && `(⚠️ Overload +${data.extra})`}
                               </p>
@@ -559,7 +625,10 @@ const AdminDashboard = () => {
                           const data = payload[0].payload;
                           return (
                             <div className="bg-white dark:bg-m3-surface-high p-3 rounded-xl border border-slate-200 dark:border-white/15 shadow-xl text-xs">
-                              <p className="font-bold text-slate-900 dark:text-white mb-1.5">{data.dateFull}</p>
+                              <p className="font-bold text-slate-900 dark:text-white mb-0.5">{data.dateFull}</p>
+                              <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 block mb-1.5">
+                                Shift: {data.dayLabel}
+                              </span>
                               <p className="text-blue-600 dark:text-m3-primary font-semibold">
                                 🏍️ {data.Motor} Motor {data.isOverload && `(⚠️ Overload +${data.extra})`}
                               </p>
@@ -596,7 +665,7 @@ const AdminDashboard = () => {
                 Daftar Riwayat Shift Kerja
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Menampilkan {reports.length} catatan parkir (Standar 100 / Maks Darurat 130)
+                Menampilkan {reports.length} catatan parkir (Senin-Jumat Reguler • Sabtu Lembur)
               </p>
             </div>
 
@@ -644,7 +713,8 @@ const AdminDashboard = () => {
               <table className="w-full text-left text-xs sm:text-sm border-collapse">
                 <thead className="bg-slate-100 dark:bg-m3-surface-high text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px] font-bold">
                   <tr>
-                    <th className="py-3 px-4">Tanggal</th>
+                    <th className="py-3 px-4">Hari & Tanggal</th>
+                    <th className="py-3 px-4">Jadwal Shift</th>
                     <th className="py-3 px-4">Jumlah Motor</th>
                     <th className="py-3 px-4">Status Kapasitas</th>
                     <th className="py-3 px-4">Pemasukan</th>
@@ -657,11 +727,19 @@ const AdminDashboard = () => {
                   {reports.map((report) => {
                     const isOver = (report.total_motorcycles || 0) > STANDARD_PARKING_CAPACITY;
                     const extra = Math.max(0, (report.total_motorcycles || 0) - STANDARD_PARKING_CAPACITY);
+                    const meta = getDayMeta(report.date);
+                    const ScheduleIcon = meta.icon;
 
                     return (
                       <tr key={report.id} className="hover:bg-slate-50 dark:hover:bg-m3-surface-high/40 transition-colors">
                         <td className="py-3 px-4 font-semibold text-slate-900 dark:text-white whitespace-nowrap">
-                          {format(new Date(report.date), 'dd MMMM yyyy', { locale: id })}
+                          {format(new Date(report.date + 'T00:00:00'), 'EEEE, dd MMMM yyyy', { locale: id })}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-bold border inline-flex items-center gap-1 ${meta.badgeClass}`}>
+                            <ScheduleIcon className="w-3 h-3" />
+                            {meta.label}
+                          </span>
                         </td>
                         <td className="py-3 px-4 font-bold text-blue-600 dark:text-m3-primary whitespace-nowrap">
                           {report.total_motorcycles} Unit
@@ -718,6 +796,8 @@ const AdminDashboard = () => {
               {reports.map((report) => {
                 const isOver = (report.total_motorcycles || 0) > STANDARD_PARKING_CAPACITY;
                 const extra = Math.max(0, (report.total_motorcycles || 0) - STANDARD_PARKING_CAPACITY);
+                const meta = getDayMeta(report.date);
+                const ScheduleIcon = meta.icon;
 
                 return (
                   <M3Card key={report.id} level="low" className={`p-4 flex flex-col justify-between overflow-hidden ${
@@ -745,9 +825,15 @@ const AdminDashboard = () => {
                       )}
 
                       <div className="flex justify-between items-start mb-2">
-                        <span className="font-bold text-slate-900 dark:text-white text-sm">
-                          {format(new Date(report.date), 'dd MMM yyyy')}
-                        </span>
+                        <div>
+                          <span className="font-bold text-slate-900 dark:text-white text-sm block">
+                            {format(new Date(report.date + 'T00:00:00'), 'EEEE, dd MMM yyyy', { locale: id })}
+                          </span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border mt-1 inline-flex items-center gap-1 ${meta.badgeClass}`}>
+                            <ScheduleIcon className="w-2.5 h-2.5" />
+                            {meta.label}
+                          </span>
+                        </div>
                         <div className="flex items-center gap-1">
                           <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-m3-primary text-xs font-bold">
                             {report.total_motorcycles} Unit
