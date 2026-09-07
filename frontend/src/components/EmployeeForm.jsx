@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { format, getDay } from 'date-fns';
+import { format, getDay, parseISO } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { 
   Camera, 
@@ -16,7 +16,8 @@ import {
   AlertTriangle,
   Zap,
   Coffee,
-  Building2
+  Building2,
+  X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { createReport } from '../api';
@@ -45,7 +46,8 @@ const EmployeeForm = () => {
   // Day of Week Analysis (0 = Minggu/Libur, 6 = Sabtu/Lembur, 1-5 = Senin-Jumat/Reguler)
   const daySchedule = useMemo(() => {
     try {
-      const selectedDate = new Date(date + 'T00:00:00');
+      // Safe parsing for cross-platform (iOS Safari & Android)
+      const selectedDate = date ? parseISO(date) : new Date();
       const dayNum = getDay(selectedDate);
       const dayName = format(selectedDate, 'EEEE', { locale: id });
 
@@ -93,6 +95,16 @@ const EmployeeForm = () => {
     }
   }, [date]);
 
+  // Auto-dismiss status message after 6 seconds
+  useEffect(() => {
+    if (status.message) {
+      const timer = setTimeout(() => {
+        setStatus({ type: '', message: '' });
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [status.message]);
+
   // Cleanup object URL
   useEffect(() => {
     return () => {
@@ -105,8 +117,8 @@ const EmployeeForm = () => {
   // Adjust count helpers for fast thumb operation on mobile
   const adjustCount = (delta) => {
     setMotorcycles((prev) => {
-      const next = Math.max(0, Math.min(MAX_EMERGENCY_CAPACITY, (parseInt(prev, 10) || 0) + delta));
-      return next;
+      const current = parseInt(prev, 10) || 0;
+      return Math.max(0, Math.min(MAX_EMERGENCY_CAPACITY, current + delta));
     });
   };
 
@@ -144,8 +156,8 @@ const EmployeeForm = () => {
     e.preventDefault();
     setStatus({ type: '', message: '' });
 
-    if (motorcycles === undefined || motorcycles === null || motorcycles === '') {
-      setStatus({ type: 'error', message: 'Silakan tentukan jumlah motor' });
+    if (!motorcycles || motorcycles <= 0) {
+      setStatus({ type: 'error', message: 'Silakan isi jumlah motor terlebih dahulu (harus lebih dari 0)!' });
       return;
     }
 
@@ -166,13 +178,15 @@ const EmployeeForm = () => {
 
     try {
       await createReport(formData);
+      const formattedDate = format(parseISO(date), 'dd MMM yyyy');
       setStatus({ 
         type: 'success', 
-        message: `Laporan ${daySchedule.name} (${format(new Date(date), 'dd MMM yyyy')}) - ${motorcycles} motor berhasil tersimpan!` 
+        message: `Laporan ${daySchedule.name} (${formattedDate}) - ${motorcycles} motor berhasil tersimpan!` 
       });
       triggerConfetti();
       
       // Reset form fields
+      setMotorcycles(0);
       setNotes('');
       setPhoto(null);
       setPhotoPreview('');
@@ -231,7 +245,7 @@ const EmployeeForm = () => {
         {/* Status Toast Alert */}
         {status.message && (
           <div 
-            className={`mb-4 sm:mb-5 p-3 sm:p-3.5 rounded-2xl flex items-center gap-2.5 sm:gap-3 transition-all ${
+            className={`mb-4 sm:mb-5 p-3 sm:p-3.5 rounded-2xl flex items-center gap-2.5 sm:gap-3 transition-all relative ${
               status.type === 'success' 
                 ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-500/40 shadow-xs' 
                 : 'bg-red-50 dark:bg-red-950/80 text-red-800 dark:text-red-200 border border-red-300 dark:border-red-500/40 shadow-xs'
@@ -242,7 +256,15 @@ const EmployeeForm = () => {
             ) : (
               <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-red-600 dark:text-m3-error" />
             )}
-            <p className="text-xs sm:text-sm font-medium flex-1">{status.message}</p>
+            <p className="text-xs sm:text-sm font-medium flex-1 pr-6">{status.message}</p>
+            <button
+              type="button"
+              onClick={() => setStatus({ type: '', message: '' })}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              title="Tutup"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         )}
 
@@ -439,7 +461,6 @@ const EmployeeForm = () => {
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     onChange={handlePhotoChange}
                     className="hidden"
                     id="photo-upload-change"
@@ -458,7 +479,6 @@ const EmployeeForm = () => {
                 <input
                   type="file"
                   accept="image/*"
-                  capture="environment"
                   onChange={handlePhotoChange}
                   className="hidden"
                   id="photo-upload"
