@@ -1,36 +1,66 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-export const AnimatedCounter = ({ value, prefix = '', suffix = '', duration = 800 }) => {
-  const [displayValue, setDisplayValue] = useState(0);
+/**
+ * AnimatedCounter
+ * Ultra-performant counter that updates DOM text directly via ref.
+ * Eliminates virtual DOM re-renders (prevents 120fps-360fps React state thrashing on iOS).
+ */
+export const AnimatedCounter = ({ value, prefix = '', suffix = '', duration = 700 }) => {
+  const spanRef = useRef(null);
+  const currentValRef = useRef(0);
 
   useEffect(() => {
-    let startTimestamp = null;
-    const startValue = displayValue;
     const targetValue = typeof value === 'number' ? value : parseInt(value, 10) || 0;
+    const startValue = currentValRef.current;
+
+    // If values are the same, ensure direct sync
+    if (startValue === targetValue) {
+      if (spanRef.current) {
+        spanRef.current.textContent = `${prefix}${targetValue.toLocaleString('id-ID')}${suffix}`;
+      }
+      return;
+    }
+
+    let startTimestamp = null;
+    let animId = null;
 
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      
-      // Easing out cubic
+
+      // Fast cubic ease-out
       const easeOut = 1 - Math.pow(1 - progress, 3);
       const current = Math.floor(startValue + (targetValue - startValue) * easeOut);
-      
-      setDisplayValue(current);
+      currentValRef.current = current;
+
+      if (spanRef.current) {
+        spanRef.current.textContent = `${prefix}${current.toLocaleString('id-ID')}${suffix}`;
+      }
 
       if (progress < 1) {
-        window.requestAnimationFrame(step);
+        animId = window.requestAnimationFrame(step);
+      } else {
+        currentValRef.current = targetValue;
+        if (spanRef.current) {
+          spanRef.current.textContent = `${prefix}${targetValue.toLocaleString('id-ID')}${suffix}`;
+        }
       }
     };
 
-    window.requestAnimationFrame(step);
-  }, [value, duration]);
+    animId = window.requestAnimationFrame(step);
+    return () => {
+      if (animId) window.cancelAnimationFrame(animId);
+    };
+  }, [value, duration, prefix, suffix]);
+
+  const initialTarget = typeof value === 'number' ? value : parseInt(value, 10) || 0;
 
   return (
-    <span className="tabular-nums tracking-tight">
-      {prefix}{displayValue.toLocaleString('id-ID')}{suffix}
+    <span ref={spanRef} className="tabular-nums tracking-tight">
+      {prefix}{initialTarget.toLocaleString('id-ID')}{suffix}
     </span>
   );
 };
 
 export default AnimatedCounter;
+

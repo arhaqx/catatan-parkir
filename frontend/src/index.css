@@ -6,9 +6,18 @@
   * {
     -webkit-tap-highlight-color: transparent;
   }
+  html {
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+  }
   body {
     @apply bg-[#f8f9fa] text-slate-800 dark:bg-m3-surface dark:text-slate-100 antialiased selection:bg-blue-600 selection:text-white dark:selection:bg-m3-primary dark:selection:text-m3-on-primary font-sans transition-colors duration-200;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button, a, input, select, textarea {
+    touch-action: manipulation;
   }
 }
 

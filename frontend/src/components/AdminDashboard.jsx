@@ -101,7 +101,10 @@ const AdminDashboard = () => {
   const [exporting, setExporting] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [chartType, setChartType] = useState('bar'); // 'bar' | 'area'
-  const [viewMode, setViewMode] = useState('table'); // 'cards' | 'table'
+  // On mobile/iPhone, default to responsive cards for 10x faster layout and touch performance
+  const [viewMode, setViewMode] = useState(() => {
+    return typeof window !== 'undefined' && window.innerWidth < 768 ? 'cards' : 'table';
+  });
   const [dateRange, setDateRange] = useState([subDays(new Date(), 29), new Date()]);
   const [startDate, endDate] = dateRange;
   const [activeShortcut, setActiveShortcut] = useState('month');
@@ -572,8 +575,8 @@ const AdminDashboard = () => {
               </button>
             </div>
           ) : (
-            <div className="h-72 sm:h-80 w-full">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-72 sm:h-80 w-full min-h-[280px]">
+              <ResponsiveContainer width="100%" height="100%" debounce={50}>
                 {chartType === 'bar' ? (
                   <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
@@ -813,6 +816,8 @@ const AdminDashboard = () => {
                           <img
                             src={getImageSrc(report.photo_path)}
                             alt="Foto Parkir"
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

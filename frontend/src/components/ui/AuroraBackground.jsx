@@ -2,21 +2,39 @@ import React from 'react';
 
 /**
  * Google Stitch / Material 3 Ambient Canvas
- * Adaptive Light & Dark mode background container
+ * High-performance hardware-accelerated ambient canvas (Pure CSS radial gradients).
+ * Eliminates GPU fill-rate throttling and lag on iOS Safari / iPhone WebKit.
  */
 export const AuroraBackground = ({ children, className = '' }) => {
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-[#f8f9fa] dark:bg-m3-surface text-slate-800 dark:text-slate-100 transition-colors duration-200">
-      {/* Dark Mode Ambient Blobs */}
-      <div className="hidden dark:block pointer-events-none fixed -top-32 left-1/2 h-[450px] w-[450px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-blue-600/15 via-indigo-600/10 to-teal-500/10 blur-[130px]" />
-      <div className="hidden dark:block pointer-events-none fixed top-1/2 -left-32 h-[400px] w-[400px] rounded-full bg-gradient-to-br from-indigo-700/10 via-purple-600/10 to-transparent blur-[120px]" />
-      <div className="hidden dark:block pointer-events-none fixed -bottom-32 -right-32 h-[450px] w-[450px] rounded-full bg-gradient-to-tl from-teal-600/10 via-blue-700/10 to-transparent blur-[130px]" />
+      {/* Light Mode Ambient Glow (Zero-lag hardware accelerated gradient) */}
+      <div 
+        aria-hidden="true" 
+        className="dark:hidden pointer-events-none fixed inset-0 z-0 opacity-70 transform-gpu"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle 500px at 50% -10%, rgba(219, 234, 254, 0.6), transparent 70%),
+            radial-gradient(circle 400px at 0% 40%, rgba(224, 231, 255, 0.5), transparent 70%),
+            radial-gradient(circle 450px at 100% 80%, rgba(204, 251, 241, 0.4), transparent 70%)
+          `
+        }}
+      />
 
-      {/* Light Mode Subtle Ambient Blobs */}
-      <div className="dark:hidden pointer-events-none fixed -top-32 left-1/2 h-[450px] w-[450px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-blue-200/40 via-indigo-100/30 to-teal-100/30 blur-[120px]" />
-      <div className="dark:hidden pointer-events-none fixed top-1/2 -left-32 h-[400px] w-[400px] rounded-full bg-gradient-to-br from-blue-100/30 via-purple-100/20 to-transparent blur-[100px]" />
+      {/* Dark Mode Ambient Glow (Zero-lag hardware accelerated gradient) */}
+      <div 
+        aria-hidden="true" 
+        className="hidden dark:block pointer-events-none fixed inset-0 z-0 opacity-40 transform-gpu"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle 500px at 50% -10%, rgba(26, 115, 232, 0.18), transparent 70%),
+            radial-gradient(circle 400px at 0% 40%, rgba(99, 102, 241, 0.14), transparent 70%),
+            radial-gradient(circle 450px at 100% 80%, rgba(20, 184, 166, 0.12), transparent 70%)
+          `
+        }}
+      />
 
-      {/* Content wrapper with flex layout */}
+      {/* Content wrapper */}
       <div className={`relative z-10 w-full min-h-screen ${className}`}>
         {children}
       </div>
@@ -25,3 +43,4 @@ export const AuroraBackground = ({ children, className = '' }) => {
 };
 
 export default AuroraBackground;
+

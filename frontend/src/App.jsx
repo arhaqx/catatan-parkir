@@ -1,12 +1,25 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
-import { Bike, LayoutDashboard } from 'lucide-react';
+import { Bike, LayoutDashboard, Loader2 } from 'lucide-react';
 import EmployeeForm from './components/EmployeeForm';
-import AdminDashboard from './components/AdminDashboard';
 import BottomNav from './components/ui/BottomNav';
 import ThemeToggle from './components/ui/ThemeToggle';
 import { ThemeProvider } from './context/ThemeContext';
 import ErrorBoundary from './components/ErrorBoundary';
+
+// Lazy load heavy Admin Dashboard (recharts + datepicker) to eliminate lag on mobile/iPhone
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+
+// Ultra-fast M3 Loading Skeleton
+const PageLoader = () => (
+  <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3 p-6 text-slate-500 dark:text-slate-400">
+    <div className="w-11 h-11 rounded-2xl bg-blue-50 dark:bg-m3-surface-high border border-blue-200 dark:border-white/10 flex items-center justify-center shadow-xs">
+      <Loader2 className="w-5 h-5 text-blue-600 dark:text-m3-primary animate-spin" />
+    </div>
+    <span className="text-xs font-semibold tracking-wide">Memuat Dashboard Admin...</span>
+  </div>
+);
+
 
 function AppContent() {
   return (
@@ -68,10 +81,12 @@ function AppContent() {
 
       {/* Main Content View */}
       <main className="flex-1 w-full">
-        <Routes>
-          <Route path="/" element={<EmployeeForm />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-        </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<EmployeeForm />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+          </Routes>
+        </Suspense>
       </main>
 
       {/* Mobile Floating Bottom Navigation Dock */}
