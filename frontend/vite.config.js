@@ -12,4 +12,26 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    target: 'es2020',
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 650,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/recharts')) {
+            return 'vendor-charts';
+          }
+          if (id.includes('node_modules/react-datepicker') || id.includes('node_modules/date-fns')) {
+            return 'vendor-datepicker';
+          }
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) {
+            return 'vendor-react';
+          }
+        },
+      },
+    },
+  },
 })
+
+

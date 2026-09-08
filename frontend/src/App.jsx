@@ -6,6 +6,7 @@ import BottomNav from './components/ui/BottomNav';
 import ThemeToggle from './components/ui/ThemeToggle';
 import { ThemeProvider } from './context/ThemeContext';
 import ErrorBoundary from './components/ErrorBoundary';
+import AuroraBackground from './components/ui/AuroraBackground';
 
 // Lazy load heavy Admin Dashboard (recharts + datepicker) to eliminate lag on mobile/iPhone
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
@@ -23,7 +24,7 @@ const PageLoader = () => (
 
 function AppContent() {
   return (
-    <div className="min-h-screen bg-[#f8f9fa] dark:bg-m3-surface text-slate-800 dark:text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white dark:selection:bg-m3-primary dark:selection:text-m3-on-primary transition-colors duration-200">
+    <AuroraBackground className="flex flex-col selection:bg-blue-600 selection:text-white dark:selection:bg-m3-primary dark:selection:text-m3-on-primary">
       {/* Desktop Google Stitch App Bar */}
       <header className="hidden md:block sticky top-0 z-40 bg-white/90 dark:bg-m3-surface-container/90 border-b border-slate-200 dark:border-white/[0.08] px-8 py-3 backdrop-blur-xl transition-colors">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -91,7 +92,7 @@ function AppContent() {
 
       {/* Mobile Floating Bottom Navigation Dock */}
       <BottomNav />
-    </div>
+    </AuroraBackground>
   );
 }
 

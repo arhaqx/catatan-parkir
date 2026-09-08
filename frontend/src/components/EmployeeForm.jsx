@@ -19,9 +19,7 @@ import {
   Building2,
   X
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
 import { createReport, checkServerHealth } from '../api';
-import AuroraBackground from './ui/AuroraBackground';
 import M3Card from './ui/M3Card';
 import CapacityGauge from './ui/CapacityGauge';
 import AnimatedCounter from './ui/AnimatedCounter';
@@ -37,17 +35,18 @@ const EmployeeForm = () => {
   const [loading, setLoading] = useState(false);
   const [serverStatus, setServerStatus] = useState('checking'); // 'online' | 'offline' | 'checking'
 
-  // Live Server Health Check
+  // Live Server Health Check - Battery and CPU efficient (skips when tab is inactive)
   useEffect(() => {
     let isMounted = true;
     const verifyServer = async () => {
+      if (document.hidden) return;
       const res = await checkServerHealth();
       if (isMounted) {
         setServerStatus(res.ok ? 'online' : 'offline');
       }
     };
     verifyServer();
-    const interval = setInterval(verifyServer, 20000);
+    const interval = setInterval(verifyServer, 25000);
     return () => {
       isMounted = false;
       clearInterval(interval);
@@ -157,11 +156,12 @@ const EmployeeForm = () => {
     setPhotoPreview('');
   };
 
-  const triggerConfetti = () => {
+  const triggerConfetti = async () => {
     try {
+      const confetti = (await import('canvas-confetti')).default;
       confetti({
-        particleCount: 80,
-        spread: 70,
+        particleCount: 50,
+        spread: 60,
         origin: { y: 0.7 },
         colors: ['#8ab4f8', '#6dd58c', '#c2e7ff', '#fbbc04', '#a855f7'],
       });
@@ -221,7 +221,7 @@ const EmployeeForm = () => {
   const ScheduleIcon = daySchedule.icon;
 
   return (
-    <AuroraBackground className="flex flex-col items-center justify-start pb-36 pt-3 px-3 sm:px-6">
+    <div className="flex flex-col items-center justify-start pb-36 pt-3 px-3 sm:px-6">
       {/* Top Google Stitch App Bar (Mobile & iPhone Optimized) */}
       <div className="w-full max-w-lg mb-3 flex items-center justify-between gap-2 px-0.5">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -594,7 +594,7 @@ const EmployeeForm = () => {
           </button>
         </form>
       </M3Card>
-    </AuroraBackground>
+    </div>
   );
 };
 

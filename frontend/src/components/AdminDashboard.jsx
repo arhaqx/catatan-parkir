@@ -41,7 +41,6 @@ import {
   Building2
 } from 'lucide-react';
 import { getReports, deleteReport, seedSampleReports, exportReportsToExcel, baseURL } from '../api';
-import AuroraBackground from './ui/AuroraBackground';
 import M3Card from './ui/M3Card';
 import AnimatedCounter from './ui/AnimatedCounter';
 import ThemeToggle from './ui/ThemeToggle';
@@ -284,9 +283,14 @@ const AdminDashboard = () => {
     }, 0);
   }, [reports]);
 
-  const getImageSrc = (path) => {
+  const getImageSrc = (path, thumbnail = true) => {
     if (!path) return '';
-    return path.startsWith('http') ? path : `${baseURL}${path}`;
+    let src = path.startsWith('http') ? path : `${baseURL}${path}`;
+    // Optimize Cloudinary on mobile: auto WebP/AVIF format, quality compression, and 500px thumbnail
+    if (thumbnail && src.includes('cloudinary.com') && src.includes('/upload/')) {
+      return src.replace('/upload/', '/upload/w_500,q_auto,f_auto/');
+    }
+    return src;
   };
 
   const chartData = useMemo(() => {
@@ -307,7 +311,7 @@ const AdminDashboard = () => {
   }, [reports]);
 
   return (
-    <AuroraBackground className="min-h-screen pb-28 pt-4 px-3 sm:px-6 md:px-10">
+    <div className="min-h-screen pb-28 pt-4 px-3 sm:px-6 md:px-10">
       {/* Toast Notification */}
       {toast.message && (
         <div className="fixed top-4 right-4 z-50 animate-bounce-short">
@@ -610,7 +614,13 @@ const AdminDashboard = () => {
                         return null;
                       }}
                     />
-                    <Bar dataKey="Motor" fill="url(#barGradient)" radius={[8, 8, 0, 0]} maxBarSize={45} />
+                    <Bar 
+                      dataKey="Motor" 
+                      fill="url(#barGradient)" 
+                      radius={[8, 8, 0, 0]} 
+                      maxBarSize={45} 
+                      isAnimationActive={false}
+                    />
                   </BarChart>
                 ) : (
                   <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -652,6 +662,7 @@ const AdminDashboard = () => {
                       strokeWidth={3}
                       fillOpacity={1}
                       fill="url(#areaGradient)"
+                      isAnimationActive={false}
                     />
                   </AreaChart>
                 )}
@@ -766,7 +777,7 @@ const AdminDashboard = () => {
                         <td className="py-3 px-4">
                           {report.photo_path ? (
                             <button
-                              onClick={() => setPreviewPhoto(getImageSrc(report.photo_path))}
+                              onClick={() => setPreviewPhoto(getImageSrc(report.photo_path, false))}
                               className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-500/15 hover:bg-blue-100 dark:hover:bg-blue-500/30 text-blue-600 dark:text-m3-primary border border-blue-200 dark:border-blue-500/30 text-xs font-semibold transition-all cursor-pointer"
                             >
                               <Eye className="w-3.5 h-3.5" />
@@ -810,7 +821,7 @@ const AdminDashboard = () => {
                     <div>
                       {report.photo_path ? (
                         <div 
-                          onClick={() => setPreviewPhoto(getImageSrc(report.photo_path))}
+                          onClick={() => setPreviewPhoto(getImageSrc(report.photo_path, false))}
                           className="relative h-36 rounded-xl overflow-hidden mb-3 cursor-pointer group bg-slate-200 dark:bg-m3-surface-container"
                         >
                           <img
@@ -969,7 +980,7 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
-    </AuroraBackground>
+    </div>
   );
 };
 
