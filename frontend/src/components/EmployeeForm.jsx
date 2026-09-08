@@ -37,8 +37,8 @@ const EmployeeForm = () => {
   const [loading, setLoading] = useState(false);
 
   const RATE_PER_MOTORCYCLE = 3000;
-  const STANDARD_CAPACITY = 100; // Kapasitas normal
-  const MAX_EMERGENCY_CAPACITY = 130; // Batas darurat maksimum
+  const STANDARD_CAPACITY = 90; // Kapasitas normal
+  const MAX_EMERGENCY_CAPACITY = 110; // Batas darurat maksimum
   const revenue = motorcycles * RATE_PER_MOTORCYCLE;
   const isOverload = motorcycles > STANDARD_CAPACITY;
   const extraMotors = Math.max(0, motorcycles - STANDARD_CAPACITY);
@@ -238,7 +238,7 @@ const EmployeeForm = () => {
             Catat Jumlah Motor
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-0.5 sm:mt-1">
-            Standar 100 unit • Toleransi overload 130 unit
+            Standar 90 unit • Toleransi overload 110 unit
           </p>
         </div>
 
@@ -312,7 +312,7 @@ const EmployeeForm = () => {
               <div className="w-full p-2.5 rounded-2xl bg-purple-100 dark:bg-purple-950/80 border border-purple-300 dark:border-purple-500/40 text-purple-800 dark:text-purple-200 text-xs flex items-start gap-2 animate-bounce-short">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-purple-600 dark:text-purple-400" />
                 <span>
-                  <strong>Kondisi Overload (+{extraMotors} Motor):</strong> Melebihi kapasitas standar 100. Pastikan foto penataan parkir terlampir rapi ya!
+                  <strong>Kondisi Overload (+{extraMotors} Motor):</strong> Melebihi kapasitas standar 90. Pastikan foto penataan parkir terlampir rapi ya!
                 </span>
               </div>
             )}
@@ -398,18 +398,18 @@ const EmployeeForm = () => {
                   type="button"
                   onClick={handleSetStandard}
                   className="py-2.5 px-3 rounded-xl m3-button-tonal text-xs font-bold text-center active:scale-95 transition-all shadow-2xs"
-                  title="Isi 100 Motor (Standar Penuh)"
+                  title="Isi 90 Motor (Standar Penuh)"
                 >
-                  Standar (100)
+                  Standar (90)
                 </button>
 
                 <button
                   type="button"
                   onClick={handleSetEmergency}
                   className="py-2.5 px-3 rounded-xl bg-purple-100 dark:bg-purple-950/70 hover:bg-purple-200 dark:hover:bg-purple-900/70 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-500/40 text-xs font-bold text-center active:scale-95 transition-all shadow-2xs"
-                  title="Isi 130 Motor (Kapasitas Overload Maksimal)"
+                  title="Isi 110 Motor (Kapasitas Overload Maksimal)"
                 >
-                  Overload (130)
+                  Overload (110)
                 </button>
               </div>
             </div>

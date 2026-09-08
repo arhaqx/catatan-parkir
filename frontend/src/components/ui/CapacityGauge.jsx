@@ -2,8 +2,8 @@ import React from 'react';
 
 export const CapacityGauge = ({ 
   current = 0, 
-  standardCapacity = 100, 
-  maxEmergency = 130, 
+  standardCapacity = 90, 
+  maxEmergency = 110, 
   size = 126 
 }) => {
   const isOverload = current > standardCapacity;

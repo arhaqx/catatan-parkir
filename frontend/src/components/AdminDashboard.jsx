@@ -47,8 +47,8 @@ import AnimatedCounter from './ui/AnimatedCounter';
 import ThemeToggle from './ui/ThemeToggle';
 import { useTheme } from '../context/ThemeContext';
 
-const STANDARD_PARKING_CAPACITY = 100; // Kapasitas standar 100 motor
-const MAX_EMERGENCY_CAPACITY = 130; // Batas darurat 130 motor
+const STANDARD_PARKING_CAPACITY = 90; // Kapasitas standar 90 motor
+const MAX_EMERGENCY_CAPACITY = 110; // Batas darurat 110 motor
 const DEFAULT_ADMIN_PIN = '1312'; // PIN rahasia admin
 
 // Helper for Schedule & Day Type
@@ -501,16 +501,16 @@ const AdminDashboard = () => {
               <span className={`text-xs font-semibold ${
                 averageDaily > STANDARD_PARKING_CAPACITY ? 'text-purple-600 dark:text-purple-400 font-bold' : 'text-amber-600 dark:text-amber-300'
               }`}>
-                ({averageDaily}/100)
+                ({averageDaily}/{STANDARD_PARKING_CAPACITY})
               </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium flex items-center gap-1">
               {overloadDaysCount > 0 ? (
                 <span className="text-purple-600 dark:text-purple-400 font-semibold flex items-center gap-1">
-                  <Zap className="w-3 h-3" /> {overloadDaysCount} Hari Overload (&gt;100 Unit)
+                  <Zap className="w-3 h-3" /> {overloadDaysCount} Hari Overload (&gt;{STANDARD_PARKING_CAPACITY} Unit)
                 </span>
               ) : (
-                <span>Standar 100 • Overload 130</span>
+                <span>Standar 90 • Overload 110</span>
               )}
             </p>
           </M3Card>

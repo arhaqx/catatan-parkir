@@ -218,9 +218,10 @@ router.get('/export', async (req, res) => {
 
         rows.forEach((row, idx) => {
             const count = row.total_motorcycles || 0;
-            const isOver = count > 100;
-            const extra = Math.max(0, count - 100);
-            const statusStr = isOver ? `⚠️ Overload (+${extra} Motor)` : `Normal (${Math.round((count / 100) * 100)}%)`;
+            const standardCap = 90;
+            const isOver = count > standardCap;
+            const extra = Math.max(0, count - standardCap);
+            const statusStr = isOver ? `⚠️ Overload (+${extra} Motor)` : `Normal (${Math.round((count / standardCap) * 100)}%)`;
 
             let shiftLabel = '🏢 Reguler';
             let formattedDate = row.date;
