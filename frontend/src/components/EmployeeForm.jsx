@@ -192,8 +192,9 @@ const EmployeeForm = () => {
       setPhotoPreview('');
     } catch (error) {
       console.error(error);
-      const errMsg = error.response?.data?.error || 'Gagal mengirim laporan. Periksa koneksi backend Anda.';
-      setStatus({ type: 'error', message: errMsg });
+      const rawErr = error.friendlyMessage || error.response?.data?.error || error.response?.data?.message || error.message;
+      const errMsg = typeof rawErr === 'string' ? rawErr : (rawErr?.message || 'Gagal mengirim laporan. Periksa koneksi backend Anda.');
+      setStatus({ type: 'error', message: String(errMsg) });
     } finally {
       setLoading(false);
     }

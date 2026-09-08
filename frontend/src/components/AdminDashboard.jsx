@@ -130,7 +130,8 @@ const AdminDashboard = () => {
       setReports(data || []);
     } catch (error) {
       console.error(error);
-      showToast('error', 'Gagal memuat data laporan dari server.');
+      const msg = error.friendlyMessage || (typeof error.response?.data?.error === 'string' ? error.response.data.error : null) || 'Gagal memuat data laporan dari server.';
+      showToast('error', String(msg));
     } finally {
       setLoading(false);
     }

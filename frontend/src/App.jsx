@@ -6,6 +6,7 @@ import AdminDashboard from './components/AdminDashboard';
 import BottomNav from './components/ui/BottomNav';
 import ThemeToggle from './components/ui/ThemeToggle';
 import { ThemeProvider } from './context/ThemeContext';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function AppContent() {
   return (
@@ -82,9 +83,11 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <ErrorBoundary>
+        <Router>
+          <AppContent />
+        </Router>
+      </ErrorBoundary>
     </ThemeProvider>
   );
 }

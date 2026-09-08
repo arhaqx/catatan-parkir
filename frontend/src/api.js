@@ -29,12 +29,37 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Tangani error timeout atau server offline
+    let friendlyMessage = 'Terjadi kesalahan pada sistem.';
+
     if (error.code === 'ECONNABORTED') {
-      error.message = 'Koneksi ke server timeout (waktu habis). Periksa jaringan Anda.';
-    } else if (!error.response) {
-      error.message = 'Tidak dapat terhubung ke server backend. Pastikan server Azure aktif.';
+      friendlyMessage = 'Koneksi ke server timeout (waktu habis). Periksa jaringan Anda.';
+    } else if (error.response) {
+      const status = error.response.status;
+      const data = error.response.data;
+
+      if (status === 502 || status === 503 || status === 504) {
+        friendlyMessage = 'Server backend Azure sedang offline atau tidak dapat dijangkau (502 Bad Gateway). Pastikan VM Azure dan service PM2 menyala.';
+      } else if (typeof data === 'string') {
+        friendlyMessage = data;
+      } else if (typeof data?.error === 'string') {
+        friendlyMessage = data.error;
+      } else if (typeof data?.error?.message === 'string') {
+        friendlyMessage = data.error.message;
+      } else if (typeof data?.message === 'string') {
+        friendlyMessage = data.message;
+      } else {
+        friendlyMessage = `Server merespons dengan kode error ${status}.`;
+      }
+    } else if (error.request) {
+      friendlyMessage = 'Tidak dapat terhubung ke server backend. Pastikan server aktif dan koneksi internet stabil.';
+    } else {
+      friendlyMessage = typeof error.message === 'string' ? error.message : 'Terjadi kendala yang tidak terduga.';
     }
+
+    // Pastikan error.friendlyMessage dan error.message selalu bertipe string aman
+    error.friendlyMessage = friendlyMessage;
+    error.message = friendlyMessage;
+
     return Promise.reject(error);
   }
 );
