@@ -20,7 +20,7 @@ import {
   X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { createReport } from '../api';
+import { createReport, checkServerHealth } from '../api';
 import AuroraBackground from './ui/AuroraBackground';
 import M3Card from './ui/M3Card';
 import CapacityGauge from './ui/CapacityGauge';
@@ -35,6 +35,24 @@ const EmployeeForm = () => {
   const [photoPreview, setPhotoPreview] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
+  const [serverStatus, setServerStatus] = useState('checking'); // 'online' | 'offline' | 'checking'
+
+  // Live Server Health Check
+  useEffect(() => {
+    let isMounted = true;
+    const verifyServer = async () => {
+      const res = await checkServerHealth();
+      if (isMounted) {
+        setServerStatus(res.ok ? 'online' : 'offline');
+      }
+    };
+    verifyServer();
+    const interval = setInterval(verifyServer, 20000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   const RATE_PER_MOTORCYCLE = 3000;
   const STANDARD_CAPACITY = 90; // Kapasitas normal
@@ -222,9 +240,23 @@ const EmployeeForm = () => {
 
         {/* Status Chip & Theme Switcher */}
         <div className="flex items-center gap-1.5 shrink-0">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-m3-surface-high border border-emerald-200 dark:border-white/10 text-emerald-700 dark:text-m3-tertiary shadow-2xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-m3-tertiary animate-pulse shrink-0" />
-            <span className="font-semibold text-[10px] sm:text-[11px]">Online</span>
+          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border shadow-2xs transition-all ${
+            serverStatus === 'online'
+              ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+              : serverStatus === 'offline'
+              ? 'bg-red-50 dark:bg-red-950/60 border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300'
+              : 'bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300'
+          }`}>
+            <span className={`w-2 h-2 rounded-full shrink-0 ${
+              serverStatus === 'online'
+                ? 'bg-emerald-500 animate-pulse'
+                : serverStatus === 'offline'
+                ? 'bg-red-500'
+                : 'bg-amber-500 animate-pulse'
+            }`} />
+            <span className="font-semibold text-[10px] sm:text-[11px]">
+              {serverStatus === 'online' ? 'Online' : serverStatus === 'offline' ? 'Offline' : 'Cek...'}
+            </span>
           </div>
 
           <ThemeToggle size="sm" />
@@ -266,6 +298,19 @@ const EmployeeForm = () => {
             >
               <X className="w-4 h-4" />
             </button>
+          </div>
+        )}
+
+        {/* Server Offline Warning Banner */}
+        {serverStatus === 'offline' && !status.message && (
+          <div className="mb-4 sm:mb-5 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-500/40 text-xs flex items-start gap-2.5 shadow-xs">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+            <div className="flex-1">
+              <strong className="block font-bold">Koneksi Backend Belum Terhubung (502)</strong>
+              <span>
+                Server backend Azure belum aktif atau tidak merespons di port 3001. Silakan cek VM Azure Anda.
+              </span>
+            </div>
           </div>
         )}
 
