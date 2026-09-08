@@ -311,7 +311,7 @@ const AdminDashboard = () => {
   }, [reports]);
 
   return (
-    <div className="min-h-screen pb-28 pt-4 px-3 sm:px-6 md:px-10">
+    <div className="min-h-screen pb-32 sm:pb-36 pt-4 px-3 sm:px-6 md:px-10">
       {/* Toast Notification */}
       {toast.message && (
         <div className="fixed top-4 right-4 z-50 animate-bounce-short">

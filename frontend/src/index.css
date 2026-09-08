@@ -108,6 +108,29 @@
   box-shadow: 0 0 0 3px rgba(138, 180, 248, 0.2);
 }
 
+/* iOS Safari Native Input Fixes */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+  margin: 0;
+  padding: 0;
+  min-height: 1.25em;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+}
+
 /* Material 3 Filled Tonal Button */
 .m3-button-tonal {
   background-color: #e8eaed;

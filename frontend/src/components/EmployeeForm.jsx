@@ -221,7 +221,7 @@ const EmployeeForm = () => {
   const ScheduleIcon = daySchedule.icon;
 
   return (
-    <div className="flex flex-col items-center justify-start pb-36 pt-3 px-3 sm:px-6">
+    <div className="flex flex-col items-center justify-start pb-32 sm:pb-36 pt-2 sm:pt-4 px-3 sm:px-6 w-full max-w-lg mx-auto">
       {/* Top Google Stitch App Bar (Mobile & iPhone Optimized) */}
       <div className="w-full max-w-lg mb-3 flex items-center justify-between gap-2 px-0.5">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -328,13 +328,24 @@ const EmployeeForm = () => {
               </span>
             </div>
             
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full m3-input rounded-2xl px-3.5 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium focus:outline-none"
-              required
-            />
+            <div className="relative w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-m3-surface-low overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-500 transition-all flex items-center">
+              <CalendarIcon className="w-4 h-4 text-blue-600 dark:text-m3-primary ml-3.5 shrink-0 pointer-events-none" />
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full min-w-0 max-w-full bg-transparent px-3 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white focus:outline-none block cursor-pointer"
+                style={{
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                  appearance: 'none',
+                  minWidth: 0,
+                  maxWidth: '100%',
+                  boxSizing: 'border-box'
+                }}
+                required
+              />
+            </div>
 
             {/* Sunday / Saturday Special Notice */}
             {daySchedule.notice && (

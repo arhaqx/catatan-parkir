@@ -26,7 +26,7 @@ export const M3Card = ({
   return (
     <div 
       onClick={onClick}
-      className={`rounded-3xl border ${levelClasses[level] || levelClasses.container} ${hoverClass} ${className}`}
+      className={`rounded-3xl border overflow-hidden ${levelClasses[level] || levelClasses.container} ${hoverClass} ${className}`}
     >
       {children}
     </div>
