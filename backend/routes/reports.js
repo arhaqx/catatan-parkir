@@ -46,7 +46,7 @@ const uploadToCloudinary = (fileBuffer) => {
 
 // POST /api/reports - Create a new report (Uploads photo to Cloudinary)
 router.post('/', upload.single('photo'), async (req, res) => {
-    const { date, total_motorcycles, notes } = req.body;
+    const { date, total_motorcycles, notes, officer_name } = req.body;
     
     if (!date || total_motorcycles === undefined || total_motorcycles === '') {
         return res.status(400).json({ error: 'Date dan total_motorcycles wajib diisi' });
@@ -54,6 +54,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
 
     const motorcycles = parseInt(total_motorcycles, 10);
     const total_revenue = motorcycles * 3000;
+    const assignedOfficer = (officer_name && String(officer_name).trim()) ? String(officer_name).trim() : 'Ucup';
     let photo_path = null;
 
     // Jika ada file foto yang diunggah
@@ -70,8 +71,8 @@ router.post('/', upload.single('photo'), async (req, res) => {
         }
     }
 
-    const sql = `INSERT INTO reports (date, total_motorcycles, total_revenue, notes, photo_path) VALUES (?, ?, ?, ?, ?)`;
-    const params = [date, motorcycles, total_revenue, notes || null, photo_path];
+    const sql = `INSERT INTO reports (date, total_motorcycles, total_revenue, notes, photo_path, officer_name) VALUES (?, ?, ?, ?, ?, ?)`;
+    const params = [date, motorcycles, total_revenue, notes || null, photo_path, assignedOfficer];
 
     db.run(sql, params, function(err) {
         if (err) {
@@ -84,7 +85,8 @@ router.post('/', upload.single('photo'), async (req, res) => {
             total_motorcycles: motorcycles,
             total_revenue,
             notes,
-            photo_path
+            photo_path,
+            officer_name: assignedOfficer
         });
     });
 });
@@ -152,7 +154,7 @@ router.post('/seed', (req, res) => {
         const notes = notesList[index];
 
         db.run(
-            `INSERT INTO reports (date, total_motorcycles, total_revenue, notes, photo_path) VALUES (?, ?, ?, ?, NULL)`,
+            `INSERT INTO reports (date, total_motorcycles, total_revenue, notes, photo_path, officer_name) VALUES (?, ?, ?, ?, NULL, 'Ucup')`,
             [dateStr, count, revenue, notes],
             (err) => {
                 if (!err) inserted++;
@@ -200,6 +202,7 @@ router.get('/export', async (req, res) => {
             { header: 'ID', key: 'id', width: 10 },
             { header: 'Tanggal', key: 'date', width: 24 },
             { header: 'Jadwal Shift', key: 'shift_type', width: 18 },
+            { header: 'Penanggung Jawab', key: 'officer_name', width: 20 },
             { header: 'Total Motor', key: 'total_motorcycles', width: 16 },
             { header: 'Status Kapasitas', key: 'status_capacity', width: 22 },
             { header: 'Tarif/Unit', key: 'rate', width: 14 },
@@ -240,6 +243,7 @@ router.get('/export', async (req, res) => {
                 id: row.id,
                 date: formattedDate,
                 shift_type: shiftLabel,
+                officer_name: row.officer_name || 'Ucup',
                 total_motorcycles: count,
                 status_capacity: statusStr,
                 rate: 3000,

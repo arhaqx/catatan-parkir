@@ -38,7 +38,8 @@ import {
   AlertTriangle,
   Zap,
   Coffee,
-  Building2
+  Building2,
+  UserCheck
 } from 'lucide-react';
 import { getReports, deleteReport, seedSampleReports, exportReportsToExcel, baseURL } from '../api';
 import M3Card from './ui/M3Card';
@@ -730,6 +731,7 @@ const AdminDashboard = () => {
                   <tr>
                     <th className="py-3 px-4">Hari & Tanggal</th>
                     <th className="py-3 px-4">Jadwal Shift</th>
+                    <th className="py-3 px-4">Penanggung Jawab</th>
                     <th className="py-3 px-4">Jumlah Motor</th>
                     <th className="py-3 px-4">Status Kapasitas</th>
                     <th className="py-3 px-4">Pemasukan</th>
@@ -754,6 +756,12 @@ const AdminDashboard = () => {
                           <span className={`px-2.5 py-1 rounded-full text-xs font-bold border inline-flex items-center gap-1 ${meta.badgeClass}`}>
                             <ScheduleIcon className="w-3 h-3" />
                             {meta.label}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                            <UserCheck className="w-3.5 h-3.5 text-blue-600 dark:text-m3-primary" />
+                            {report.officer_name || 'Ucup'}
                           </span>
                         </td>
                         <td className="py-3 px-4 font-bold text-blue-600 dark:text-m3-primary whitespace-nowrap">
@@ -846,10 +854,16 @@ const AdminDashboard = () => {
                           <span className="font-bold text-slate-900 dark:text-white text-sm block">
                             {format(new Date(report.date + 'T00:00:00'), 'EEEE, dd MMM yyyy', { locale: id })}
                           </span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border mt-1 inline-flex items-center gap-1 ${meta.badgeClass}`}>
-                            <ScheduleIcon className="w-2.5 h-2.5" />
-                            {meta.label}
-                          </span>
+                          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border inline-flex items-center gap-1 ${meta.badgeClass}`}>
+                              <ScheduleIcon className="w-2.5 h-2.5" />
+                              {meta.label}
+                            </span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-m3-surface-container text-slate-700 dark:text-slate-300 inline-flex items-center gap-1">
+                              <UserCheck className="w-2.5 h-2.5 text-blue-600 dark:text-m3-primary" />
+                              {report.officer_name || 'Ucup'}
+                            </span>
+                          </div>
                         </div>
                         <div className="flex items-center gap-1">
                           <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-m3-primary text-xs font-bold">

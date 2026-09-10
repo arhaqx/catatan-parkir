@@ -17,7 +17,8 @@ import {
   Zap,
   Coffee,
   Building2,
-  X
+  X,
+  UserCheck
 } from 'lucide-react';
 import { createReport, checkServerHealth } from '../api';
 import M3Card from './ui/M3Card';
@@ -31,6 +32,8 @@ const EmployeeForm = () => {
   const [notes, setNotes] = useState('');
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
+  const [officerType, setOfficerType] = useState('ucup'); // 'ucup' | 'other'
+  const [customOfficerName, setCustomOfficerName] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
   const [serverStatus, setServerStatus] = useState('checking'); // 'online' | 'offline' | 'checking'
@@ -184,12 +187,20 @@ const EmployeeForm = () => {
       return;
     }
 
+    if (officerType === 'other' && !customOfficerName.trim()) {
+      setStatus({ type: 'error', message: 'Silakan isi nama penanggung jawab pengganti!' });
+      return;
+    }
+
+    const assignedOfficer = officerType === 'ucup' ? 'Ucup' : (customOfficerName.trim() || 'Lainnya');
+
     setLoading(true);
 
     const formData = new FormData();
     formData.append('date', date);
     formData.append('total_motorcycles', motorcycles);
     formData.append('notes', notes);
+    formData.append('officer_name', assignedOfficer);
     if (photo) {
       formData.append('photo', photo);
     }
@@ -199,7 +210,7 @@ const EmployeeForm = () => {
       const formattedDate = format(parseISO(date), 'dd MMM yyyy');
       setStatus({ 
         type: 'success', 
-        message: `Laporan ${daySchedule.name} (${formattedDate}) - ${motorcycles} motor berhasil tersimpan!` 
+        message: `Laporan ${daySchedule.name} (${formattedDate}) oleh ${assignedOfficer} - ${motorcycles} motor berhasil tersimpan!` 
       });
       triggerConfetti();
       
@@ -208,6 +219,8 @@ const EmployeeForm = () => {
       setNotes('');
       setPhoto(null);
       setPhotoPreview('');
+      setOfficerType('ucup');
+      setCustomOfficerName('');
     } catch (error) {
       console.error(error);
       const rawErr = error.friendlyMessage || error.response?.data?.error || error.response?.data?.message || error.message;
@@ -582,6 +595,82 @@ const EmployeeForm = () => {
               rows="2"
               className="w-full m3-input placeholder:text-slate-400 text-xs sm:text-sm rounded-2xl px-3.5 sm:px-4 py-2.5 sm:py-3 resize-none font-normal focus:outline-none"
             />
+          </div>
+
+          {/* Penanggung Jawab Section */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between ml-0.5">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <UserCheck className="w-3.5 h-3.5 text-blue-600 dark:text-m3-primary" />
+                <span>Penanggung Jawab</span>
+              </label>
+              <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">Petugas Parkir</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              {/* Option 1: Ucup */}
+              <label
+                htmlFor="officer-ucup"
+                className={`relative flex items-center gap-2.5 p-3 rounded-2xl border cursor-pointer transition-all ${
+                  officerType === 'ucup'
+                    ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/30 text-blue-900 dark:text-blue-100 shadow-xs'
+                    : 'border-slate-200 dark:border-white/10 bg-slate-50/60 dark:bg-m3-surface-low hover:bg-slate-100 dark:hover:bg-white/[0.04] text-slate-700 dark:text-slate-300'
+                }`}
+              >
+                <input
+                  type="radio"
+                  id="officer-ucup"
+                  name="officer"
+                  value="ucup"
+                  checked={officerType === 'ucup'}
+                  onChange={() => setOfficerType('ucup')}
+                  className="w-4 h-4 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400 cursor-pointer accent-blue-600"
+                />
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs sm:text-sm font-bold truncate">Ucup</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">Petugas Utama</span>
+                </div>
+              </label>
+
+              {/* Option 2: Lainnya */}
+              <label
+                htmlFor="officer-other"
+                className={`relative flex items-center gap-2.5 p-3 rounded-2xl border cursor-pointer transition-all ${
+                  officerType === 'other'
+                    ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/30 text-blue-900 dark:text-blue-100 shadow-xs'
+                    : 'border-slate-200 dark:border-white/10 bg-slate-50/60 dark:bg-m3-surface-low hover:bg-slate-100 dark:hover:bg-white/[0.04] text-slate-700 dark:text-slate-300'
+                }`}
+              >
+                <input
+                  type="radio"
+                  id="officer-other"
+                  name="officer"
+                  value="other"
+                  checked={officerType === 'other'}
+                  onChange={() => setOfficerType('other')}
+                  className="w-4 h-4 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400 cursor-pointer accent-blue-600"
+                />
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs sm:text-sm font-bold truncate">Lainnya</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">Pengganti / Kakak</span>
+                </div>
+              </label>
+            </div>
+
+            {/* Input teks tambahan jika 'Lainnya' dipilih */}
+            {officerType === 'other' && (
+              <div className="pt-1 transition-all">
+                <input
+                  type="text"
+                  value={customOfficerName}
+                  onChange={(e) => setCustomOfficerName(e.target.value)}
+                  placeholder="Masukkan nama penanggung jawab (cth: Kakak Ucup)..."
+                  className="w-full m3-input placeholder:text-slate-400 text-xs sm:text-sm rounded-2xl px-3.5 sm:px-4 py-2.5 sm:py-3 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  autoFocus
+                  required
+                />
+              </div>
+            )}
           </div>
 
           {/* Submit Action Button */}
