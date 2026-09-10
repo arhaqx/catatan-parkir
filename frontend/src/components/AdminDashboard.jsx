@@ -42,6 +42,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import { getReports, deleteReport, seedSampleReports, exportReportsToExcel, baseURL } from '../api';
+import { getHolidayInfo } from '../utils/indonesiaHolidays';
 import M3Card from './ui/M3Card';
 import AnimatedCounter from './ui/AnimatedCounter';
 import ThemeToggle from './ui/ThemeToggle';
@@ -51,13 +52,29 @@ const STANDARD_PARKING_CAPACITY = 90; // Kapasitas standar 90 motor
 const MAX_EMERGENCY_CAPACITY = 110; // Batas darurat 110 motor
 const DEFAULT_ADMIN_PIN = '1312'; // PIN rahasia admin
 
-// Helper for Schedule & Day Type
+// Helper for Schedule & Day Type terintegrasi Kalender Indonesia (Tanggal Merah)
 const getDayMeta = (dateStr) => {
   try {
     const d = new Date(dateStr + 'T00:00:00');
     const dayNum = getDay(d);
     const dayName = format(d, 'EEEE', { locale: id });
+    const holiday = getHolidayInfo(dateStr);
 
+    // 1. Tanggal Merah / Libur Nasional / Cuti Bersama
+    if (holiday) {
+      const isJoint = holiday.isJointLeave || holiday.type === 'joint_leave';
+      return {
+        type: 'holiday',
+        name: dayName,
+        label: isJoint ? `Cuti: ${holiday.name}` : `Libur: ${holiday.name}`,
+        icon: Sparkles,
+        badgeClass: isJoint
+          ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-500/40'
+          : 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border-red-300 dark:border-red-500/40'
+      };
+    }
+
+    // 2. Hari Minggu (Libur Mingguan)
     if (dayNum === 0) {
       return {
         type: 'sunday',

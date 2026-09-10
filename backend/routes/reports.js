@@ -7,6 +7,7 @@ const db = require('../database');
 const exceljs = require('exceljs');
 const { format, subDays, getDay } = require('date-fns');
 const { id } = require('date-fns/locale');
+const { getHolidayInfo } = require('../utils/indonesiaHolidays');
 
 // Konfigurasi Cloudinary dari file .env
 cloudinary.config({
@@ -231,8 +232,15 @@ router.get('/export', async (req, res) => {
             try {
                 const d = new Date(row.date + 'T00:00:00');
                 const dayNum = getDay(d);
-                if (dayNum === 6) shiftLabel = '⚡ Lembur Sabtu';
-                else if (dayNum === 0) shiftLabel = '🛑 Libur Minggu';
+                const holiday = getHolidayInfo(row.date);
+
+                if (holiday) {
+                    shiftLabel = `🔴 Libur: ${holiday.name}`;
+                } else if (dayNum === 6) {
+                    shiftLabel = '⚡ Lembur Sabtu';
+                } else if (dayNum === 0) {
+                    shiftLabel = '🛑 Libur Minggu';
+                }
                 formattedDate = format(d, 'EEEE, dd/MM/yyyy', { locale: id });
             } catch (err) {
                 // fallback

@@ -21,6 +21,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import { createReport, checkServerHealth } from '../api';
+import { getHolidayInfo } from '../utils/indonesiaHolidays';
 import M3Card from './ui/M3Card';
 import CapacityGauge from './ui/CapacityGauge';
 import AnimatedCounter from './ui/AnimatedCounter';
@@ -63,14 +64,35 @@ const EmployeeForm = () => {
   const isOverload = motorcycles > STANDARD_CAPACITY;
   const extraMotors = Math.max(0, motorcycles - STANDARD_CAPACITY);
 
-  // Day of Week Analysis (0 = Minggu/Libur, 6 = Sabtu/Lembur, 1-5 = Senin-Jumat/Reguler)
+  // Analisis Tanggal Terintegrasi Kalender Indonesia (Hari Libur Nasional, Cuti Bersama, & Akhir Pekan)
   const daySchedule = useMemo(() => {
     try {
       // Safe parsing for cross-platform (iOS Safari & Android)
       const selectedDate = date ? parseISO(date) : new Date();
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
       const dayNum = getDay(selectedDate);
       const dayName = format(selectedDate, 'EEEE', { locale: id });
+      const holiday = getHolidayInfo(dateStr);
 
+      // 1. Hari Libur Nasional atau Cuti Bersama (Tanggal Merah Resmi Indonesia)
+      if (holiday) {
+        const isJoint = holiday.isJointLeave || holiday.type === 'joint_leave';
+        return {
+          type: 'holiday',
+          name: dayName,
+          title: isJoint ? `Cuti Bersama • ${holiday.name}` : `Tanggal Merah • ${holiday.name}`,
+          chip: isJoint ? 'Cuti Bersama' : 'Tanggal Merah',
+          chipColor: isJoint
+            ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-500/40'
+            : 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border-red-300 dark:border-red-500/40',
+          notice: `🔴 Libur Resmi: ${holiday.name}. Jika ada lemburan shift kerja atau penjagaan khusus, catatan tetap dapat dikirim.`,
+          icon: Sparkles,
+          holidayName: holiday.name,
+          isJoint
+        };
+      }
+
+      // 2. Hari Minggu (Libur Mingguan Pabrik)
       if (dayNum === 0) {
         return {
           type: 'sunday',
@@ -79,9 +101,14 @@ const EmployeeForm = () => {
           chip: 'Libur Minggu',
           chipColor: 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30',
           notice: 'Pabrik libur operasional hari Minggu. Jika ada lemburan shift khusus, catatan tetap bisa dikirim.',
-          icon: Coffee
+          icon: Coffee,
+          holidayName: null,
+          isJoint: false
         };
-      } else if (dayNum === 6) {
+      } 
+      
+      // 3. Hari Sabtu (Shift Lembur)
+      if (dayNum === 6) {
         return {
           type: 'saturday',
           name: dayName,
@@ -89,19 +116,24 @@ const EmployeeForm = () => {
           chip: 'Shift Lembur',
           chipColor: 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/40',
           notice: 'Jadwal lemburan pabrik hari Sabtu aktif! Parkiran melayani kendaraan shift lembur.',
-          icon: Zap
+          icon: Zap,
+          holidayName: null,
+          isJoint: false
         };
-      } else {
-        return {
-          type: 'weekday',
-          name: dayName,
-          title: `Hari ${dayName} • Reguler`,
-          chip: 'Shift Reguler',
-          chipColor: 'bg-blue-100 dark:bg-m3-primary-container/60 text-blue-800 dark:text-m3-primary border-blue-200 dark:border-m3-primary/30',
-          notice: null,
-          icon: Building2
-        };
-      }
+      } 
+
+      // 4. Hari Reguler (Senin - Jumat)
+      return {
+        type: 'weekday',
+        name: dayName,
+        title: `Hari ${dayName} • Reguler`,
+        chip: 'Shift Reguler',
+        chipColor: 'bg-blue-100 dark:bg-m3-primary-container/60 text-blue-800 dark:text-m3-primary border-blue-200 dark:border-m3-primary/30',
+        notice: null,
+        icon: Building2,
+        holidayName: null,
+        isJoint: false
+      };
     } catch {
       return {
         type: 'weekday',
@@ -110,7 +142,9 @@ const EmployeeForm = () => {
         chip: 'Shift Kerja',
         chipColor: 'bg-blue-100 dark:bg-m3-primary-container/60 text-blue-800 dark:text-m3-primary border-blue-200 dark:border-m3-primary/30',
         notice: null,
-        icon: Building2
+        icon: Building2,
+        holidayName: null,
+        isJoint: false
       };
     }
   }, [date]);
@@ -335,14 +369,24 @@ const EmployeeForm = () => {
                 <CalendarIcon className="w-3.5 h-3.5 text-blue-600 dark:text-m3-primary" />
                 <span>Tanggal</span>
               </label>
-              <span className={`text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-lg border truncate max-w-[200px] sm:max-w-none ${daySchedule.chipColor} flex items-center gap-1`}>
+              <span className={`text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-lg border truncate max-w-[220px] sm:max-w-none ${daySchedule.chipColor} flex items-center gap-1`}>
                 <ScheduleIcon className="w-3 h-3 shrink-0" />
                 <span className="truncate">{daySchedule.title}</span>
               </span>
             </div>
             
-            <div className="relative w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-m3-surface-low overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-500 transition-all flex items-center">
-              <CalendarIcon className="w-4 h-4 text-blue-600 dark:text-m3-primary ml-3.5 shrink-0 pointer-events-none" />
+            <div className={`relative w-full rounded-2xl border bg-white dark:bg-m3-surface-low overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-500 transition-all flex items-center ${
+              daySchedule.type === 'holiday' 
+                ? 'border-red-400 dark:border-red-500/50 bg-red-50/15 dark:bg-red-950/15' 
+                : daySchedule.type === 'sunday'
+                ? 'border-red-300/80 dark:border-red-500/30'
+                : 'border-slate-200 dark:border-white/10'
+            }`}>
+              <CalendarIcon className={`w-4 h-4 ml-3.5 shrink-0 pointer-events-none ${
+                daySchedule.type === 'holiday' || daySchedule.type === 'sunday'
+                  ? 'text-red-600 dark:text-red-400'
+                  : 'text-blue-600 dark:text-m3-primary'
+              }`} />
               <input
                 type="date"
                 value={date}
@@ -360,10 +404,12 @@ const EmployeeForm = () => {
               />
             </div>
 
-            {/* Sunday / Saturday Special Notice */}
+            {/* Special Notice for Holiday / Sunday / Saturday */}
             {daySchedule.notice && (
               <p className={`text-[10px] sm:text-[11px] font-medium px-2.5 sm:px-3 py-1.5 rounded-xl border mt-1 flex items-start gap-1.5 ${
-                daySchedule.type === 'sunday' 
+                daySchedule.type === 'holiday'
+                  ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30'
+                  : daySchedule.type === 'sunday' 
                   ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30'
                   : 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
               }`}>
