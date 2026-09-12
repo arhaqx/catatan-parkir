@@ -18,7 +18,9 @@ import {
   Coffee,
   Building2,
   X,
-  UserCheck
+  UserCheck,
+  Check,
+  CircleDollarSign
 } from 'lucide-react';
 import { createReport, checkServerHealth } from '../api';
 import { getHolidayInfo } from '../utils/indonesiaHolidays';
@@ -26,6 +28,7 @@ import M3Card from './ui/M3Card';
 import CapacityGauge from './ui/CapacityGauge';
 import AnimatedCounter from './ui/AnimatedCounter';
 import ThemeToggle from './ui/ThemeToggle';
+import ServerStatusBadge from './ui/ServerStatusBadge';
 
 const EmployeeForm = () => {
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -39,7 +42,7 @@ const EmployeeForm = () => {
   const [loading, setLoading] = useState(false);
   const [serverStatus, setServerStatus] = useState('checking'); // 'online' | 'offline' | 'checking'
 
-  // Live Server Health Check - Battery and CPU efficient (skips when tab is inactive)
+  // Live Server Health Check - Battery and CPU efficient
   useEffect(() => {
     let isMounted = true;
     const verifyServer = async () => {
@@ -50,7 +53,7 @@ const EmployeeForm = () => {
       }
     };
     verifyServer();
-    const interval = setInterval(verifyServer, 25000);
+    const interval = setInterval(verifyServer, 30000);
     return () => {
       isMounted = false;
       clearInterval(interval);
@@ -58,7 +61,7 @@ const EmployeeForm = () => {
   }, []);
 
   const RATE_PER_MOTORCYCLE = 3000;
-  const STANDARD_CAPACITY = 90; // Kapasitas normal
+  const STANDARD_CAPACITY = 90; // Kapasitas normal standar
   const MAX_EMERGENCY_CAPACITY = 110; // Batas darurat maksimum
   const revenue = motorcycles * RATE_PER_MOTORCYCLE;
   const isOverload = motorcycles > STANDARD_CAPACITY;
@@ -67,25 +70,24 @@ const EmployeeForm = () => {
   // Analisis Tanggal Terintegrasi Kalender Indonesia (Hari Libur Nasional, Cuti Bersama, & Akhir Pekan)
   const daySchedule = useMemo(() => {
     try {
-      // Safe parsing for cross-platform (iOS Safari & Android)
       const selectedDate = date ? parseISO(date) : new Date();
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
       const dayNum = getDay(selectedDate);
       const dayName = format(selectedDate, 'EEEE', { locale: id });
       const holiday = getHolidayInfo(dateStr);
 
-      // 1. Hari Libur Nasional atau Cuti Bersama (Tanggal Merah Resmi Indonesia)
+      // 1. Hari Libur Nasional atau Cuti Bersama
       if (holiday) {
         const isJoint = holiday.isJointLeave || holiday.type === 'joint_leave';
         return {
           type: 'holiday',
           name: dayName,
-          title: isJoint ? `Cuti Bersama • ${holiday.name}` : `Tanggal Merah • ${holiday.name}`,
+          title: isJoint ? `Cuti Bersama: ${holiday.name}` : `Tanggal Merah: ${holiday.name}`,
           chip: isJoint ? 'Cuti Bersama' : 'Tanggal Merah',
           chipColor: isJoint
-            ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-500/40'
-            : 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border-red-300 dark:border-red-500/40',
-          notice: `🔴 Libur Resmi: ${holiday.name}. Jika ada lemburan shift kerja atau penjagaan khusus, catatan tetap dapat dikirim.`,
+            ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
+            : 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30',
+          notice: `Libur Resmi: ${holiday.name}. Jika ada lemburan shift kerja, data tetap dapat dikirim.`,
           icon: Sparkles,
           holidayName: holiday.name,
           isJoint
@@ -99,8 +101,8 @@ const EmployeeForm = () => {
           name: dayName,
           title: 'Hari Minggu • Libur Pabrik',
           chip: 'Libur Minggu',
-          chipColor: 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30',
-          notice: 'Pabrik libur operasional hari Minggu. Jika ada lemburan shift khusus, catatan tetap bisa dikirim.',
+          chipColor: 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30',
+          notice: 'Pabrik libur operasional hari Minggu. Catatan tetap dapat dikirim jika ada penjagaan khusus.',
           icon: Coffee,
           holidayName: null,
           isJoint: false
@@ -114,7 +116,7 @@ const EmployeeForm = () => {
           name: dayName,
           title: 'Hari Sabtu • Shift Lembur',
           chip: 'Shift Lembur',
-          chipColor: 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/40',
+          chipColor: 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-500/30',
           notice: 'Jadwal lemburan pabrik hari Sabtu aktif! Parkiran melayani kendaraan shift lembur.',
           icon: Zap,
           holidayName: null,
@@ -128,7 +130,7 @@ const EmployeeForm = () => {
         name: dayName,
         title: `Hari ${dayName} • Reguler`,
         chip: 'Shift Reguler',
-        chipColor: 'bg-blue-100 dark:bg-m3-primary-container/60 text-blue-800 dark:text-m3-primary border-blue-200 dark:border-m3-primary/30',
+        chipColor: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/20',
         notice: null,
         icon: Building2,
         holidayName: null,
@@ -140,7 +142,7 @@ const EmployeeForm = () => {
         name: '',
         title: 'Shift Kerja',
         chip: 'Shift Kerja',
-        chipColor: 'bg-blue-100 dark:bg-m3-primary-container/60 text-blue-800 dark:text-m3-primary border-blue-200 dark:border-m3-primary/30',
+        chipColor: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/20',
         notice: null,
         icon: Building2,
         holidayName: null,
@@ -149,7 +151,7 @@ const EmployeeForm = () => {
     }
   }, [date]);
 
-  // Auto-dismiss status message after 6 seconds
+  // Auto-dismiss status message
   useEffect(() => {
     if (status.message) {
       const timer = setTimeout(() => {
@@ -168,7 +170,6 @@ const EmployeeForm = () => {
     };
   }, [photoPreview]);
 
-  // Adjust count helpers for fast thumb operation on mobile
   const adjustCount = (delta) => {
     setMotorcycles((prev) => {
       const current = parseInt(prev, 10) || 0;
@@ -199,56 +200,52 @@ const EmployeeForm = () => {
       confetti({
         particleCount: 50,
         spread: 60,
-        origin: { y: 0.7 },
-        colors: ['#8ab4f8', '#6dd58c', '#c2e7ff', '#fbbc04', '#a855f7'],
+        origin: { y: 0.8 },
+        colors: ['#3b82f6', '#10b981', '#f59e0b', '#6366f1']
       });
-    } catch (err) {
-      console.log('Confetti effect:', err);
+    } catch {
+      // Fallback silent
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus({ type: '', message: '' });
 
-    if (!motorcycles || motorcycles <= 0) {
-      setStatus({ type: 'error', message: 'Silakan isi jumlah motor terlebih dahulu (harus lebih dari 0)!' });
+    if (motorcycles <= 0) {
+      setStatus({ type: 'error', message: 'Jumlah motor harus lebih dari 0!' });
       return;
     }
 
-    if (motorcycles > MAX_EMERGENCY_CAPACITY) {
-      setStatus({ type: 'error', message: `Batas darurat maksimal adalah ${MAX_EMERGENCY_CAPACITY} motor!` });
-      return;
+    let finalOfficerName = 'Ucup';
+    if (officerType === 'other') {
+      const trimmed = customOfficerName.trim();
+      if (!trimmed) {
+        setStatus({ type: 'error', message: 'Silakan isi nama penanggung jawab pengganti!' });
+        return;
+      }
+      finalOfficerName = trimmed;
     }
-
-    if (officerType === 'other' && !customOfficerName.trim()) {
-      setStatus({ type: 'error', message: 'Silakan isi nama penanggung jawab pengganti!' });
-      return;
-    }
-
-    const assignedOfficer = officerType === 'ucup' ? 'Ucup' : (customOfficerName.trim() || 'Lainnya');
 
     setLoading(true);
-
-    const formData = new FormData();
-    formData.append('date', date);
-    formData.append('total_motorcycles', motorcycles);
-    formData.append('notes', notes);
-    formData.append('officer_name', assignedOfficer);
-    if (photo) {
-      formData.append('photo', photo);
-    }
+    setStatus({ type: '', message: '' });
 
     try {
+      const formData = new FormData();
+      formData.append('date', date);
+      formData.append('total_motorcycles', motorcycles);
+      formData.append('officer_name', finalOfficerName);
+      if (notes.trim()) formData.append('notes', notes.trim());
+      if (photo) formData.append('photo', photo);
+
       await createReport(formData);
-      const formattedDate = format(parseISO(date), 'dd MMM yyyy');
+
+      triggerConfetti();
+
       setStatus({ 
         type: 'success', 
-        message: `Laporan ${daySchedule.name} (${formattedDate}) oleh ${assignedOfficer} - ${motorcycles} motor berhasil tersimpan!` 
+        message: `Laporan berhasil tersimpan! Petugas: ${finalOfficerName} • Pemasukan: Rp ${revenue.toLocaleString('id-ID')}` 
       });
-      triggerConfetti();
       
-      // Reset form fields
       setMotorcycles(0);
       setNotes('');
       setPhoto(null);
@@ -268,218 +265,119 @@ const EmployeeForm = () => {
   const ScheduleIcon = daySchedule.icon;
 
   return (
-    <div className="flex flex-col items-center justify-start pb-32 sm:pb-36 pt-2 sm:pt-4 px-3 sm:px-6 w-full max-w-lg mx-auto">
-      {/* Top Google Stitch App Bar (Mobile & iPhone Optimized) */}
-      <div className="w-full max-w-lg mb-3 flex items-center justify-between gap-2 px-0.5">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-[0_4px_14px_rgba(26,115,232,0.3)] shrink-0">
-            <Bike className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-6 pb-28 sm:pb-36">
+      {/* Mobile-Only Minimal Header (< md) */}
+      <div className="md:hidden flex items-center justify-between mb-4 px-1">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-blue-600 dark:bg-blue-500 flex items-center justify-center text-white shadow-sm shadow-blue-500/20">
+            <Bike className="w-4 h-4" />
           </div>
-          <div className="min-w-0">
-            <h1 className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight truncate">
+          <div>
+            <h1 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
               Parkir Pabrik
             </h1>
-            <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+            <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium block -mt-0.5">
               Jepara • Shift Kerja
-            </p>
-          </div>
-        </div>
-
-        {/* Status Chip & Theme Switcher */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border shadow-2xs transition-all ${
-            serverStatus === 'online'
-              ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
-              : serverStatus === 'offline'
-              ? 'bg-red-50 dark:bg-red-950/60 border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300'
-              : 'bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300'
-          }`}>
-            <span className={`w-2 h-2 rounded-full shrink-0 ${
-              serverStatus === 'online'
-                ? 'bg-emerald-500 animate-pulse'
-                : serverStatus === 'offline'
-                ? 'bg-red-500'
-                : 'bg-amber-500 animate-pulse'
-            }`} />
-            <span className="font-semibold text-[10px] sm:text-[11px]">
-              {serverStatus === 'online' ? 'Online' : serverStatus === 'offline' ? 'Offline' : 'Cek...'}
             </span>
           </div>
-
+        </div>
+        <div className="flex items-center gap-2">
+          <ServerStatusBadge />
           <ThemeToggle size="sm" />
         </div>
       </div>
 
-      {/* Main Google Stitch Surface Container */}
-      <M3Card level="container" className="w-full max-w-lg p-4 sm:p-7">
-        {/* Title Header */}
-        <div className="text-center mb-5 sm:mb-6">
-          <h2 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Catat Jumlah Motor
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-0.5 sm:mt-1">
-            Standar 90 unit • Toleransi overload 110 unit
-          </p>
-        </div>
-
-        {/* Status Toast Alert */}
-        {status.message && (
-          <div 
-            className={`mb-4 sm:mb-5 p-3 sm:p-3.5 rounded-2xl flex items-center gap-2.5 sm:gap-3 transition-all relative ${
-              status.type === 'success' 
-                ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-500/40 shadow-xs' 
-                : 'bg-red-50 dark:bg-red-950/80 text-red-800 dark:text-red-200 border border-red-300 dark:border-red-500/40 shadow-xs'
-            }`}
-          >
-            {status.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-emerald-600 dark:text-m3-tertiary" />
-            ) : (
-              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-red-600 dark:text-m3-error" />
-            )}
-            <p className="text-xs sm:text-sm font-medium flex-1 pr-6">{status.message}</p>
-            <button
-              type="button"
-              onClick={() => setStatus({ type: '', message: '' })}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-              title="Tutup"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-
-        {/* Server Offline Warning Banner */}
-        {serverStatus === 'offline' && !status.message && (
-          <div className="mb-4 sm:mb-5 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-500/40 text-xs flex items-start gap-2.5 shadow-xs">
-            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-            <div className="flex-1">
-              <strong className="block font-bold">Koneksi Backend Belum Terhubung (502)</strong>
-              <span>
-                Server backend Azure belum aktif atau tidak merespons di port 3001. Silakan cek VM Azure Anda.
+      {/* Modern Responsive Grid (Desktop 2-Column, Mobile Stacked) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+        
+        {/* RIGHT COLUMN ON DESKTOP: Live Status Panel (Rendered First on Mobile for Instant Thumb Access) */}
+        <div className="lg:col-span-5 order-1 lg:order-2 space-y-4 lg:sticky lg:top-24">
+          <M3Card level="container" className="p-5 sm:p-6 space-y-5">
+            {/* Live Capacity Card Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                  <Bike className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  Kapasitas Parkir
+                </h2>
+                <p className="text-[11px] text-slate-400 dark:text-slate-400 font-medium mt-0.5">
+                  Batas standar 90 • Toleransi overload 110
+                </p>
+              </div>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${daySchedule.chipColor}`}>
+                {daySchedule.chip}
               </span>
             </div>
-          </div>
-        )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-          {/* Tanggal Input & Dynamic Day Schedule Badge */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between gap-2 ml-0.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 shrink-0">
-                <CalendarIcon className="w-3.5 h-3.5 text-blue-600 dark:text-m3-primary" />
-                <span>Tanggal</span>
-              </label>
-              <span className={`text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-lg border truncate max-w-[220px] sm:max-w-none ${daySchedule.chipColor} flex items-center gap-1`}>
-                <ScheduleIcon className="w-3 h-3 shrink-0" />
-                <span className="truncate">{daySchedule.title}</span>
-              </span>
-            </div>
-            
-            <div className={`relative w-full rounded-2xl border bg-white dark:bg-m3-surface-low overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-500 transition-all flex items-center ${
-              daySchedule.type === 'holiday' 
-                ? 'border-red-400 dark:border-red-500/50 bg-red-50/15 dark:bg-red-950/15' 
-                : daySchedule.type === 'sunday'
-                ? 'border-red-300/80 dark:border-red-500/30'
-                : 'border-slate-200 dark:border-white/10'
-            }`}>
-              <CalendarIcon className={`w-4 h-4 ml-3.5 shrink-0 pointer-events-none ${
-                daySchedule.type === 'holiday' || daySchedule.type === 'sunday'
-                  ? 'text-red-600 dark:text-red-400'
-                  : 'text-blue-600 dark:text-m3-primary'
-              }`} />
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full min-w-0 max-w-full bg-transparent px-3 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white focus:outline-none block cursor-pointer"
-                style={{
-                  WebkitAppearance: 'none',
-                  MozAppearance: 'none',
-                  appearance: 'none',
-                  minWidth: 0,
-                  maxWidth: '100%',
-                  boxSizing: 'border-box'
-                }}
-                required
-              />
-            </div>
+            {/* Redesigned Minimalist Radial Gauge */}
+            <CapacityGauge 
+              current={motorcycles} 
+              standardCapacity={STANDARD_CAPACITY} 
+              maxEmergency={MAX_EMERGENCY_CAPACITY} 
+              size={136} 
+            />
 
-            {/* Special Notice for Holiday / Sunday / Saturday */}
-            {daySchedule.notice && (
-              <p className={`text-[10px] sm:text-[11px] font-medium px-2.5 sm:px-3 py-1.5 rounded-xl border mt-1 flex items-start gap-1.5 ${
-                daySchedule.type === 'holiday'
-                  ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30'
-                  : daySchedule.type === 'sunday' 
-                  ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30'
-                  : 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
-              }`}>
-                <ScheduleIcon className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                <span>{daySchedule.notice}</span>
-              </p>
-            )}
-          </div>
-
-          {/* Interactive Capacity Gauge & Quick Steppers */}
-          <div className="p-3 sm:p-4 rounded-3xl bg-[#f1f3f4] dark:bg-m3-surface-low border border-slate-200/80 dark:border-white/[0.06] flex flex-col items-center gap-3.5 sm:gap-4">
-            <CapacityGauge current={motorcycles} standardCapacity={STANDARD_CAPACITY} maxEmergency={MAX_EMERGENCY_CAPACITY} size={122} />
-
-            {/* Overload Notice Banner */}
+            {/* Overload Alert Warning */}
             {isOverload && (
-              <div className="w-full p-2.5 rounded-2xl bg-purple-100 dark:bg-purple-950/80 border border-purple-300 dark:border-purple-500/40 text-purple-800 dark:text-purple-200 text-xs flex items-start gap-2 animate-bounce-short">
-                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-purple-600 dark:text-purple-400" />
-                <span>
-                  <strong>Kondisi Overload (+{extraMotors} Motor):</strong> Melebihi kapasitas standar 90. Pastikan foto penataan parkir terlampir rapi ya!
-                </span>
+              <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs flex items-start gap-2.5 animate-fadeIn">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                <div className="leading-snug">
+                  <strong className="block font-bold">Kondisi Overload (+{extraMotors} Motor)</strong>
+                  <span className="text-[11px] text-amber-700/90 dark:text-amber-300/90">
+                    Melebihi kapasitas standar 90. Pastikan foto penataan parkir terlampir rapi ya!
+                  </span>
+                </div>
               </div>
             )}
 
-            {/* Quick Step Buttons */}
-            <div className="w-full flex flex-col gap-2">
-              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 text-center uppercase tracking-wider">
-                Tombol Cepat Petugas
-              </span>
+            {/* Unified Quick Stepper Controls */}
+            <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-white/[0.06]">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 dark:text-slate-400 px-0.5">
+                <span>Penyesuaian Cepat</span>
+                <span>Klik untuk tambah / kurang</span>
+              </div>
 
-              {/* 5 Stepper Buttons (Responsive Grid) */}
-              <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
+              {/* 5 Neutral Segmented Stepper Buttons */}
+              <div className="grid grid-cols-5 gap-1.5">
                 <button
                   type="button"
                   onClick={() => adjustCount(-10)}
-                  className="py-2.5 rounded-xl m3-button-tonal text-xs font-bold active:scale-95 transition-transform"
+                  className="py-2 rounded-lg bg-slate-100 dark:bg-white/[0.05] hover:bg-slate-200 dark:hover:bg-white/[0.1] active:scale-95 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200/60 dark:border-white/[0.06] transition-all cursor-pointer"
                 >
                   -10
                 </button>
                 <button
                   type="button"
                   onClick={() => adjustCount(-1)}
-                  className="py-2.5 rounded-xl m3-button-tonal text-xs font-bold active:scale-95 transition-transform"
+                  className="py-2 rounded-lg bg-slate-100 dark:bg-white/[0.05] hover:bg-slate-200 dark:hover:bg-white/[0.1] active:scale-95 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200/60 dark:border-white/[0.06] transition-all cursor-pointer"
                 >
                   -1
                 </button>
                 <button
                   type="button"
                   onClick={() => adjustCount(1)}
-                  className="py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 dark:bg-m3-primary-container/80 dark:hover:bg-m3-primary-container active:scale-95 text-blue-800 dark:text-m3-on-primary-container text-xs font-bold transition-all border border-blue-300 dark:border-m3-primary/30"
+                  className="py-2 rounded-lg bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 active:scale-95 text-xs font-bold text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-500/20 transition-all cursor-pointer"
                 >
                   +1
                 </button>
                 <button
                   type="button"
                   onClick={() => adjustCount(5)}
-                  className="py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 dark:bg-m3-primary-container/80 dark:hover:bg-m3-primary-container active:scale-95 text-blue-800 dark:text-m3-on-primary-container text-xs font-bold transition-all border border-blue-300 dark:border-m3-primary/30"
+                  className="py-2 rounded-lg bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 active:scale-95 text-xs font-bold text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-500/20 transition-all cursor-pointer"
                 >
                   +5
                 </button>
                 <button
                   type="button"
                   onClick={() => adjustCount(10)}
-                  className="py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold transition-all shadow-xs"
+                  className="py-2 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-xs font-bold text-white shadow-2xs transition-all cursor-pointer"
                 >
                   +10
                 </button>
               </div>
 
-              {/* Row 1: Direct Manual Input & Reset Button */}
-              <div className="flex items-center gap-2 mt-1">
+              {/* Direct Manual Number Input & Reset Button */}
+              <div className="flex items-center gap-2 pt-1">
                 <div className="relative flex-1">
                   <input
                     type="number"
@@ -491,7 +389,7 @@ const EmployeeForm = () => {
                       setMotorcycles(isNaN(val) ? 0 : Math.max(0, Math.min(MAX_EMERGENCY_CAPACITY, val)));
                     }}
                     placeholder="0"
-                    className="w-full m3-input text-center text-lg sm:text-xl font-bold rounded-xl py-2 px-3 pr-12"
+                    className="w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-center text-lg font-bold font-mono text-slate-900 dark:text-white rounded-xl py-2 px-3 pr-12 transition-all outline-none"
                   />
                   <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 pointer-events-none">
                     Unit
@@ -501,247 +399,360 @@ const EmployeeForm = () => {
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="p-2.5 rounded-xl m3-button-tonal hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-500/20 dark:hover:text-red-400 text-slate-400 text-xs font-bold shrink-0 active:scale-95 transition-all"
+                  className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/[0.05] hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 text-slate-400 border border-slate-200/60 dark:border-white/[0.06] active:scale-95 transition-all cursor-pointer"
                   title="Reset ke 0"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Row 2: Two Full-Width Preset Buttons (Never Overflow on iPhone) */}
-              <div className="grid grid-cols-2 gap-2 mt-0.5">
+              {/* Presets: Standar (90) & Overload (110) */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
                 <button
                   type="button"
                   onClick={handleSetStandard}
-                  className="py-2.5 px-3 rounded-xl m3-button-tonal text-xs font-bold text-center active:scale-95 transition-all shadow-2xs"
-                  title="Isi 90 Motor (Standar Penuh)"
+                  className={`py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-98 ${
+                    motorcycles === STANDARD_CAPACITY
+                      ? 'bg-blue-50 dark:bg-blue-950/50 border-blue-400 text-blue-700 dark:text-blue-300 font-bold'
+                      : 'bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] border-slate-200 dark:border-white/[0.06] text-slate-700 dark:text-slate-300'
+                  }`}
                 >
-                  Standar (90)
+                  <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                  <span>Standar (90)</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleSetEmergency}
-                  className="py-2.5 px-3 rounded-xl bg-purple-100 dark:bg-purple-950/70 hover:bg-purple-200 dark:hover:bg-purple-900/70 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-500/40 text-xs font-bold text-center active:scale-95 transition-all shadow-2xs"
-                  title="Isi 110 Motor (Kapasitas Overload Maksimal)"
+                  className={`py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-98 ${
+                    motorcycles === MAX_EMERGENCY_CAPACITY
+                      ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-400 text-amber-800 dark:text-amber-300 font-bold'
+                      : 'bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] border-slate-200 dark:border-white/[0.06] text-slate-700 dark:text-slate-300'
+                  }`}
                 >
-                  Overload (110)
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span>Overload (110)</span>
                 </button>
               </div>
             </div>
-          </div>
 
-          {/* Revenue Highlight Card */}
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 dark:from-[#0d2a4a] dark:via-[#112338] dark:to-[#15191f] text-white border border-blue-500/30 flex justify-between items-center gap-2 shadow-md">
-            <div className="min-w-0">
-              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-blue-200 dark:text-m3-primary block truncate">
-                Total Pemasukan ({daySchedule.chip})
-              </span>
-              <span className="text-[10px] sm:text-[11px] text-slate-300 dark:text-slate-400 font-medium block truncate">
-                Rp 3.000 × {motorcycles} motor {isOverload && `(+${extraMotors})`}
-              </span>
-            </div>
-            <div className="text-right shrink-0">
-              <span className="text-xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300">
-                <AnimatedCounter value={revenue} prefix="Rp " />
-              </span>
-            </div>
-          </div>
-
-          {/* Photo Upload Field */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between ml-0.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <Camera className="w-3.5 h-3.5 text-blue-600 dark:text-m3-primary" />
-                <span>Foto Bukti Lapangan</span>
-              </label>
-              <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                {isOverload ? '(Sangat Dianjurkan Saat Overload)' : '(Opsional)'}
-              </span>
-            </div>
-
-            {photoPreview ? (
-              <div className="relative rounded-2xl overflow-hidden border border-blue-400/40 dark:border-m3-primary/40 bg-slate-100 dark:bg-m3-surface-low group">
-                <img 
-                  src={photoPreview} 
-                  alt="Bukti Lapangan" 
-                  className="w-full h-40 sm:h-44 object-cover"
-                />
-                <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2.5">
-                  <label 
-                    htmlFor="photo-upload-change"
-                    className="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold cursor-pointer flex items-center gap-1.5 shadow-md active:scale-95 transition-all"
-                  >
-                    <Camera className="w-3.5 h-3.5" /> Ganti
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handlePhotoChange}
-                    className="hidden"
-                    id="photo-upload-change"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleRemovePhoto}
-                    className="px-3 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition-all"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Hapus
-                  </button>
-                </div>
+            {/* Clean Financial Revenue Summary Card */}
+            <div className="p-4 rounded-2xl bg-slate-900 dark:bg-[#121926] text-white border border-slate-800 dark:border-white/10 shadow-sm">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                  <CircleDollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                  Estimasi Pemasukan
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Rp 3.000 / unit
+                </span>
               </div>
-            ) : (
-              <div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handlePhotoChange}
-                  className="hidden"
-                  id="photo-upload"
-                />
-                <label
-                  htmlFor="photo-upload"
-                  className={`w-full flex flex-col items-center justify-center h-26 sm:h-28 border-2 border-dashed rounded-2xl cursor-pointer transition-all group px-3 text-center ${
-                    isOverload 
-                      ? 'border-purple-400/60 bg-purple-50/50 dark:bg-purple-950/20 hover:bg-purple-100/50' 
-                      : 'border-slate-300 dark:border-white/15 hover:border-blue-500 hover:bg-slate-50 dark:hover:bg-white/[0.03] bg-[#f8f9fa] dark:bg-m3-surface-low'
-                  }`}
+              <div className="flex items-baseline justify-between gap-2">
+                <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-white">
+                  <AnimatedCounter value={revenue} prefix="Rp " />
+                </div>
+                <span className="text-[11px] text-slate-400 font-medium">
+                  {motorcycles} motor {isOverload && `(+${extraMotors})`}
+                </span>
+              </div>
+            </div>
+          </M3Card>
+        </div>
+
+        {/* LEFT COLUMN ON DESKTOP: Form Controls Card */}
+        <div className="lg:col-span-7 order-2 lg:order-1 space-y-4">
+          <M3Card level="container" className="p-5 sm:p-7">
+            {/* Card Header */}
+            <div className="mb-5 pb-4 border-b border-slate-100 dark:border-white/[0.06]">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                Catat Laporan Parkir
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Lengkapi rincian tanggal, penanggung jawab, dan dokumentasi lapangan.
+              </p>
+            </div>
+
+            {/* Status Alert Toast */}
+            {status.message && (
+              <div 
+                className={`mb-4 p-3.5 rounded-xl flex items-center gap-2.5 transition-all relative ${
+                  status.type === 'success' 
+                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-500/30 shadow-2xs' 
+                    : 'bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-500/30 shadow-2xs'
+                }`}
+              >
+                {status.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                )}
+                <p className="text-xs font-medium flex-1 pr-6">{status.message}</p>
+                <button
+                  type="button"
+                  onClick={() => setStatus({ type: '', message: '' })}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+                  title="Tutup"
                 >
-                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-colors mb-1.5 ${
-                    isOverload 
-                      ? 'bg-purple-200 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300' 
-                      : 'bg-slate-200 dark:bg-m3-surface-high group-hover:bg-blue-100 dark:group-hover:bg-m3-primary-container text-slate-600 dark:text-slate-300 group-hover:text-blue-700 dark:group-hover:text-m3-on-primary-container'
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            {/* Server Offline Warning Banner */}
+            {serverStatus === 'offline' && !status.message && (
+              <div className="mb-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-500/30 text-xs flex items-start gap-2.5 shadow-2xs">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                <div className="flex-1 leading-relaxed">
+                  <strong className="block font-bold">Koneksi Backend Terputus (502)</strong>
+                  <span>
+                    Server backend belum terhubung. Pastikan service PM2 atau VM backend aktif.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Field 1: Tanggal & Jadwal Shift */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <CalendarIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    <span>Tanggal Laporan</span>
+                  </label>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border truncate max-w-[240px] sm:max-w-none ${daySchedule.chipColor} flex items-center gap-1`}>
+                    <ScheduleIcon className="w-3 h-3 shrink-0" />
+                    <span className="truncate">{daySchedule.title}</span>
+                  </span>
+                </div>
+                
+                <div className={`relative w-full rounded-xl border bg-white dark:bg-white/[0.03] overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all flex items-center ${
+                  daySchedule.type === 'holiday' 
+                    ? 'border-rose-300 dark:border-rose-500/40 bg-rose-50/20 dark:bg-rose-950/10' 
+                    : daySchedule.type === 'sunday'
+                    ? 'border-red-200 dark:border-red-500/30'
+                    : 'border-slate-200 dark:border-white/10'
+                }`}>
+                  <CalendarIcon className={`w-4 h-4 ml-3.5 shrink-0 pointer-events-none ${
+                    daySchedule.type === 'holiday' || daySchedule.type === 'sunday'
+                      ? 'text-rose-600 dark:text-rose-400'
+                      : 'text-blue-600 dark:text-blue-400'
+                  }`} />
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="w-full bg-transparent px-3 py-2.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:outline-none cursor-pointer"
+                    required
+                  />
+                </div>
+
+                {/* Holiday / Saturday Notice */}
+                {daySchedule.notice && (
+                  <p className={`text-[11px] font-medium px-3 py-2 rounded-xl border mt-1 flex items-start gap-1.5 leading-relaxed ${
+                    daySchedule.type === 'holiday'
+                      ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/20'
+                      : daySchedule.type === 'sunday' 
+                      ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/20'
+                      : 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-500/20'
                   }`}>
-                    <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <ScheduleIcon className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <span>{daySchedule.notice}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Field 2: Penanggung Jawab Section */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <UserCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    <span>Penanggung Jawab Shift</span>
+                  </label>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium">Petugas Parkir</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5">
+                  {/* Option 1: Ucup */}
+                  <label
+                    htmlFor="officer-ucup"
+                    className={`relative flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                      officerType === 'ucup'
+                        ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/30 text-blue-900 dark:text-blue-100 shadow-2xs'
+                        : 'border-slate-200 dark:border-white/[0.08] bg-slate-50/50 dark:bg-white/[0.02] hover:bg-slate-100 dark:hover:bg-white/[0.04] text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      id="officer-ucup"
+                      name="officer"
+                      value="ucup"
+                      checked={officerType === 'ucup'}
+                      onChange={() => setOfficerType('ucup')}
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400 cursor-pointer accent-blue-600"
+                    />
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs sm:text-sm font-bold truncate">Ucup</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-400">Petugas Utama</span>
+                    </div>
+                  </label>
+
+                  {/* Option 2: Lainnya */}
+                  <label
+                    htmlFor="officer-other"
+                    className={`relative flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                      officerType === 'other'
+                        ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/30 text-blue-900 dark:text-blue-100 shadow-2xs'
+                        : 'border-slate-200 dark:border-white/[0.08] bg-slate-50/50 dark:bg-white/[0.02] hover:bg-slate-100 dark:hover:bg-white/[0.04] text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      id="officer-other"
+                      name="officer"
+                      value="other"
+                      checked={officerType === 'other'}
+                      onChange={() => setOfficerType('other')}
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400 cursor-pointer accent-blue-600"
+                    />
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs sm:text-sm font-bold truncate">Lainnya</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-400">Pengganti / Kakak</span>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Input teks jika 'Lainnya' dipilih */}
+                {officerType === 'other' && (
+                  <div className="pt-1 transition-all">
+                    <input
+                      type="text"
+                      value={customOfficerName}
+                      onChange={(e) => setCustomOfficerName(e.target.value)}
+                      placeholder="Nama penanggung jawab pengganti (cth: Kakak Ucup)..."
+                      className="w-full bg-slate-50 dark:bg-white/[0.04] border border-blue-400 dark:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-xs sm:text-sm rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white outline-none"
+                      autoFocus
+                      required
+                    />
                   </div>
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-white">
-                    Sentuh untuk Ambil Foto / Galeri
-                  </span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    Format JPG, PNG, atau WEBP (Tersimpan di Cloudinary)
-                  </span>
-                </label>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Catatan Lapangan Textarea */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between ml-0.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-m3-primary" />
-                <span>Catatan Lapangan</span>
-              </label>
-              <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">(Opsional)</span>
-            </div>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Contoh: parkirane rameee puuuolll"
-              rows="2"
-              className="w-full m3-input placeholder:text-slate-400 text-xs sm:text-sm rounded-2xl px-3.5 sm:px-4 py-2.5 sm:py-3 resize-none font-normal focus:outline-none"
-            />
-          </div>
-
-          {/* Penanggung Jawab Section */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between ml-0.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <UserCheck className="w-3.5 h-3.5 text-blue-600 dark:text-m3-primary" />
-                <span>Penanggung Jawab</span>
-              </label>
-              <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">Petugas Parkir</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              {/* Option 1: Ucup */}
-              <label
-                htmlFor="officer-ucup"
-                className={`relative flex items-center gap-2.5 p-3 rounded-2xl border cursor-pointer transition-all ${
-                  officerType === 'ucup'
-                    ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/30 text-blue-900 dark:text-blue-100 shadow-xs'
-                    : 'border-slate-200 dark:border-white/10 bg-slate-50/60 dark:bg-m3-surface-low hover:bg-slate-100 dark:hover:bg-white/[0.04] text-slate-700 dark:text-slate-300'
-                }`}
-              >
-                <input
-                  type="radio"
-                  id="officer-ucup"
-                  name="officer"
-                  value="ucup"
-                  checked={officerType === 'ucup'}
-                  onChange={() => setOfficerType('ucup')}
-                  className="w-4 h-4 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400 cursor-pointer accent-blue-600"
-                />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-xs sm:text-sm font-bold truncate">Ucup</span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400">Petugas Utama</span>
+              {/* Field 3: Foto Bukti Lapangan */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Camera className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    <span>Foto Bukti Lapangan</span>
+                  </label>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium">
+                    {isOverload ? '(Dianjurkan saat Overload)' : '(Opsional)'}
+                  </span>
                 </div>
-              </label>
 
-              {/* Option 2: Lainnya */}
-              <label
-                htmlFor="officer-other"
-                className={`relative flex items-center gap-2.5 p-3 rounded-2xl border cursor-pointer transition-all ${
-                  officerType === 'other'
-                    ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/30 text-blue-900 dark:text-blue-100 shadow-xs'
-                    : 'border-slate-200 dark:border-white/10 bg-slate-50/60 dark:bg-m3-surface-low hover:bg-slate-100 dark:hover:bg-white/[0.04] text-slate-700 dark:text-slate-300'
-                }`}
-              >
-                <input
-                  type="radio"
-                  id="officer-other"
-                  name="officer"
-                  value="other"
-                  checked={officerType === 'other'}
-                  onChange={() => setOfficerType('other')}
-                  className="w-4 h-4 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400 cursor-pointer accent-blue-600"
-                />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-xs sm:text-sm font-bold truncate">Lainnya</span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400">Pengganti / Kakak</span>
+                {photoPreview ? (
+                  <div className="relative rounded-xl overflow-hidden border border-blue-400/40 dark:border-blue-500/40 bg-slate-100 dark:bg-white/[0.02] group">
+                    <img 
+                      src={photoPreview} 
+                      alt="Bukti Lapangan" 
+                      className="w-full h-44 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <label 
+                        htmlFor="photo-upload-change"
+                        className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95 transition-all"
+                      >
+                        <Camera className="w-3.5 h-3.5" /> Ganti
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handlePhotoChange}
+                        className="hidden"
+                        id="photo-upload-change"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemovePhoto}
+                        className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Hapus
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                      id="photo-upload"
+                    />
+                    <label
+                      htmlFor="photo-upload"
+                      className={`w-full flex flex-col items-center justify-center h-28 border-2 border-dashed rounded-xl cursor-pointer transition-all group px-3 text-center ${
+                        isOverload 
+                          ? 'border-amber-300 dark:border-amber-500/40 bg-amber-50/30 dark:bg-amber-950/10 hover:bg-amber-50/60' 
+                          : 'border-slate-200 dark:border-white/10 hover:border-blue-500 hover:bg-slate-50 dark:hover:bg-white/[0.02] bg-slate-50/40 dark:bg-white/[0.01]'
+                      }`}
+                    >
+                      <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/[0.06] group-hover:bg-blue-100 dark:group-hover:bg-blue-500/20 text-slate-600 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 flex items-center justify-center transition-colors mb-1.5">
+                        <Camera className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                        Ambil Foto atau Pilih Gambar
+                      </span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5">
+                        Format JPG, PNG, atau WEBP (Maks 10MB)
+                      </span>
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              {/* Field 4: Catatan Lapangan */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    <span>Catatan Tambahan</span>
+                  </label>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium">(Opsional)</span>
                 </div>
-              </label>
-            </div>
-
-            {/* Input teks tambahan jika 'Lainnya' dipilih */}
-            {officerType === 'other' && (
-              <div className="pt-1 transition-all">
-                <input
-                  type="text"
-                  value={customOfficerName}
-                  onChange={(e) => setCustomOfficerName(e.target.value)}
-                  placeholder="Masukkan nama penanggung jawab (cth: Kakak Ucup)..."
-                  className="w-full m3-input placeholder:text-slate-400 text-xs sm:text-sm rounded-2xl px-3.5 sm:px-4 py-2.5 sm:py-3 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  autoFocus
-                  required
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Catatan kondisi lapangan atau informasi penting..."
+                  rows="2"
+                  className="w-full bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-xs sm:text-sm rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white placeholder:text-slate-400 resize-none outline-none transition-all"
                 />
               </div>
-            )}
-          </div>
 
-          {/* Submit Action Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full m3-button-primary font-bold py-3.5 sm:py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed group cursor-pointer active:scale-[0.98] transition-transform"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                <span className="text-xs sm:text-sm font-semibold">Menyimpan Laporan...</span>
-              </>
-            ) : (
-              <>
-                <Send className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                <span className="text-xs sm:text-sm font-bold">Kirim Laporan Parkir</span>
-                <Sparkles className="w-4 h-4 opacity-80" />
-              </>
-            )}
-          </button>
-        </form>
-      </M3Card>
+              {/* Submit Action Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-[0.99] text-white text-xs sm:text-sm font-bold shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Menyimpan Laporan...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>Kirim Laporan Parkir</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </M3Card>
+        </div>
+
+      </div>
     </div>
   );
 };
