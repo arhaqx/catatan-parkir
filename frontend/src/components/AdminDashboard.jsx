@@ -46,6 +46,7 @@ import {
 } from 'lucide-react';
 import { getReports, deleteReport, seedSampleReports, exportReportsToExcel, baseURL } from '../api';
 import { getHolidayInfo } from '../utils/indonesiaHolidays';
+import { computeClientImageDHash, computeHammingDistance } from '../utils/imageHash';
 import M3Card from './ui/M3Card';
 import AnimatedCounter from './ui/AnimatedCounter';
 import ThemeToggle from './ui/ThemeToggle';
@@ -144,20 +145,21 @@ const PhotoAuthenticityBadge = ({ status, duplicateWithId, duplicateDate, hasPho
     );
   }
 
-  if (status === 'valid') {
+  // Jika secara eksplisit masih diproses oleh server/client
+  if (status === 'pending') {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
-        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-        <span>✓ Asli</span>
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30">
+        <Loader2 className="w-3 h-3 animate-spin text-blue-600 dark:text-m3-primary shrink-0" />
+        <span>Menganalisis...</span>
       </span>
     );
   }
 
-  // Pending / default: Menganalisis
+  // Default untuk status === 'valid' atau data arsip lama: Valid/Asli
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30">
-      <Loader2 className="w-3 h-3 animate-spin text-blue-600 dark:text-m3-primary shrink-0" />
-      <span>Menganalisis...</span>
+    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
+      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+      <span>✓ Asli</span>
     </span>
   );
 };
@@ -198,13 +200,81 @@ const AdminDashboard = () => {
       if (endDate) params.endDate = format(endDate, 'yyyy-MM-dd');
 
       const data = await getReports(params);
-      setReports(data || []);
+      const rawReports = Array.isArray(data) ? data : [];
+      setReports(rawReports);
+
+      // Jalankan verifikasi keaslian foto client-side secara asinkron
+      verifyPhotosClientSide(rawReports);
     } catch (error) {
       console.error(error);
       const msg = error.friendlyMessage || (typeof error.response?.data?.error === 'string' ? error.response.data.error : null) || 'Gagal memuat data laporan dari server.';
       showToast('error', String(msg));
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Verifikasi keaslian foto instan di browser
+  const verifyPhotosClientSide = async (reportsList) => {
+    const withPhoto = reportsList.filter(r => r.photo_path);
+    if (withPhoto.length === 0) return;
+
+    try {
+      // 1. Ambil/hitung dHash untuk seluruh foto yang ada
+      const hashes = {};
+      await Promise.all(withPhoto.map(async (r) => {
+        const hash = await computeClientImageDHash(getImageSrc(r.photo_path, false));
+        if (hash) hashes[r.id] = hash;
+      }));
+
+      // 2. Bandingkan secara kronologis (laporan lebih baru dibandingkan dengan laporan lebih lama)
+      const sorted = [...withPhoto].sort((a, b) => new Date(a.date) - new Date(b.date));
+      const updates = {};
+
+      for (let i = 0; i < sorted.length; i++) {
+        const current = sorted[i];
+        const currentHash = hashes[current.id];
+
+        // Jika server sudah memberi status valid/duplicate dan ada rujukan, pertahankan
+        if (current.photo_status === 'duplicate' && current.duplicate_with_id) {
+          continue;
+        }
+
+        if (!currentHash) {
+          updates[current.id] = { photo_status: current.photo_status || 'valid' };
+          continue;
+        }
+
+        let isDup = false;
+        let matched = null;
+        for (let j = 0; j < i; j++) {
+          const prev = sorted[j];
+          const prevHash = hashes[prev.id];
+          if (prevHash && computeHammingDistance(currentHash, prevHash) <= 6) {
+            isDup = true;
+            matched = prev;
+            break;
+          }
+        }
+
+        if (isDup && matched) {
+          updates[current.id] = {
+            photo_status: 'duplicate',
+            duplicate_with_id: matched.id,
+            duplicate_date: matched.date
+          };
+        } else {
+          updates[current.id] = {
+            photo_status: 'valid'
+          };
+        }
+      }
+
+      if (Object.keys(updates).length > 0) {
+        setReports(prev => prev.map(r => updates[r.id] ? { ...r, ...updates[r.id] } : r));
+      }
+    } catch (err) {
+      console.warn('Client-side photo verification warning:', err);
     }
   };
 
