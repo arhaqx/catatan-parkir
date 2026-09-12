@@ -115,32 +115,46 @@ const getDayMeta = (dateStr) => {
   }
 };
 
+// Helper format tanggal singkat untuk rujukan duplikat
+const formatDuplicateDate = (dateStr) => {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
+    if (!isNaN(d.getTime())) {
+      return format(d, 'dd MMM yyyy', { locale: id });
+    }
+  } catch {
+    // fallback
+  }
+  return dateStr;
+};
+
 // Komponen Badge Status Keaslian Foto Laporan
 const PhotoAuthenticityBadge = ({ status, duplicateWithId, duplicateDate, hasPhoto }) => {
   if (!hasPhoto) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-white/5">
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-white/5 whitespace-nowrap">
         Tanpa Foto
       </span>
     );
   }
 
   if (status === 'duplicate') {
+    const formattedDate = formatDuplicateDate(duplicateDate);
     return (
-      <div className="group relative inline-block">
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-500/40 shadow-xs cursor-help">
-          <ShieldAlert className="w-3.5 h-3.5 text-red-600 dark:text-red-400 shrink-0" />
+      <div 
+        className="flex flex-col items-start gap-0.5"
+        title={`Foto terindikasi sama/duplikat dengan laporan ${formattedDate ? 'tanggal ' + formattedDate : ''} ${duplicateWithId ? `(ID #${duplicateWithId})` : ''}`}
+      >
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-500/40 shadow-xs whitespace-nowrap">
+          <ShieldAlert className="w-3 h-3 text-red-600 dark:text-red-400 shrink-0" />
           <span>✗ Duplikat</span>
         </span>
-        {/* Tooltip detail laporan kembarannya */}
-        <div className="absolute left-0 bottom-full mb-1.5 hidden group-hover:block z-50 w-56 p-2.5 rounded-xl bg-slate-900 dark:bg-slate-950 text-white text-[11px] leading-snug shadow-xl border border-white/10 pointer-events-none">
-          <strong className="block text-red-400 font-bold mb-0.5 flex items-center gap-1">
-            <ShieldAlert className="w-3 h-3 text-red-400 shrink-0" /> Terindikasi Foto Lama
-          </strong>
-          <span className="text-slate-200">
-            Foto ini identik dengan laporan {duplicateDate ? `tanggal ${duplicateDate}` : ''} {duplicateWithId ? `(ID #${duplicateWithId})` : ''}.
+        {duplicateDate && (
+          <span className="text-[10px] text-red-600 dark:text-red-400 font-semibold leading-tight whitespace-nowrap">
+            Mirip lap. {formattedDate} {duplicateWithId ? `(#${duplicateWithId})` : ''}
           </span>
-        </div>
+        )}
       </div>
     );
   }
@@ -148,16 +162,16 @@ const PhotoAuthenticityBadge = ({ status, duplicateWithId, duplicateDate, hasPho
   // Jika secara eksplisit masih diproses oleh server/client
   if (status === 'pending') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 whitespace-nowrap">
         <Loader2 className="w-3 h-3 animate-spin text-blue-600 dark:text-m3-primary shrink-0" />
-        <span>Menganalisis...</span>
+        <span>Memeriksa...</span>
       </span>
     );
   }
 
   // Default untuk status === 'valid' atau data arsip lama: Valid/Asli
   return (
-    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 whitespace-nowrap">
       <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
       <span>✓ Asli</span>
     </span>
@@ -867,16 +881,17 @@ const AdminDashboard = () => {
               <table className="w-full text-left text-xs sm:text-sm border-collapse">
                 <thead className="bg-slate-100 dark:bg-m3-surface-high text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px] font-bold">
                   <tr>
-                    <th className="py-3 px-4">Hari & Tanggal</th>
-                    <th className="py-3 px-4">Jadwal Shift</th>
-                    <th className="py-3 px-4">Penanggung Jawab</th>
-                    <th className="py-3 px-4">Jumlah Motor</th>
-                    <th className="py-3 px-4">Status Kapasitas</th>
-                    <th className="py-3 px-4">Pemasukan</th>
-                    <th className="py-3 px-4">Foto Bukti</th>
-                    <th className="py-3 px-4">Keaslian Foto</th>
-                    <th className="py-3 px-4">Catatan</th>
-                    <th className="py-3 px-4 text-right">Aksi Admin</th>
+                    <th className="sticky left-0 z-20 bg-slate-100 dark:bg-m3-surface-high py-3 px-3.5 shadow-[3px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[3px_0_8px_-2px_rgba(0,0,0,0.4)] border-r border-slate-200/80 dark:border-white/[0.08] whitespace-nowrap">
+                      Hari & Tanggal
+                    </th>
+                    <th className="py-3 px-3.5 whitespace-nowrap">Jadwal Shift</th>
+                    <th className="py-3 px-3.5 whitespace-nowrap">Penanggung Jawab</th>
+                    <th className="py-3 px-3.5 whitespace-nowrap">Jumlah Motor</th>
+                    <th className="py-3 px-3.5 whitespace-nowrap">Status Kapasitas</th>
+                    <th className="py-3 px-3.5 whitespace-nowrap">Pemasukan</th>
+                    <th className="py-3 px-3.5 whitespace-nowrap">Foto & Keaslian</th>
+                    <th className="py-3 px-3.5">Catatan</th>
+                    <th className="py-3 px-3.5 text-right whitespace-nowrap">Aksi Admin</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-white/[0.05]">
@@ -887,26 +902,26 @@ const AdminDashboard = () => {
                     const ScheduleIcon = meta.icon;
 
                     return (
-                      <tr key={report.id} className="hover:bg-slate-50 dark:hover:bg-m3-surface-high/40 transition-colors">
-                        <td className="py-3 px-4 font-semibold text-slate-900 dark:text-white whitespace-nowrap">
+                      <tr key={report.id} className="group hover:bg-slate-50 dark:hover:bg-m3-surface-high/40 transition-colors">
+                        <td className="sticky left-0 z-10 bg-white dark:bg-m3-surface-container group-hover:bg-slate-50 dark:group-hover:bg-[#202731] py-3 px-3.5 font-semibold text-slate-900 dark:text-white whitespace-nowrap shadow-[3px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[3px_0_8px_-2px_rgba(0,0,0,0.4)] border-r border-slate-200/80 dark:border-white/[0.08] transition-colors">
                           {format(new Date(report.date + 'T00:00:00'), 'EEEE, dd MMMM yyyy', { locale: id })}
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-3 px-3.5 whitespace-nowrap">
                           <span className={`px-2.5 py-1 rounded-full text-xs font-bold border inline-flex items-center gap-1 ${meta.badgeClass}`}>
                             <ScheduleIcon className="w-3 h-3" />
                             {meta.label}
                           </span>
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-3 px-3.5 whitespace-nowrap">
                           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200">
                             <UserCheck className="w-3.5 h-3.5 text-blue-600 dark:text-m3-primary" />
                             {report.officer_name || 'Ucup'}
                           </span>
                         </td>
-                        <td className="py-3 px-4 font-bold text-blue-600 dark:text-m3-primary whitespace-nowrap">
+                        <td className="py-3 px-3.5 font-bold text-blue-600 dark:text-m3-primary whitespace-nowrap">
                           {report.total_motorcycles} Unit
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-3 px-3.5 whitespace-nowrap">
                           {isOver ? (
                             <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-500/40 inline-flex items-center gap-1">
                               <AlertTriangle className="w-3 h-3 text-purple-600 dark:text-purple-400" />
@@ -918,34 +933,38 @@ const AdminDashboard = () => {
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-4 font-bold text-emerald-600 dark:text-m3-tertiary whitespace-nowrap">
+                        <td className="py-3 px-3.5 font-bold text-emerald-600 dark:text-m3-tertiary whitespace-nowrap">
                           Rp {report.total_revenue?.toLocaleString('id-ID')}
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-3.5 whitespace-nowrap">
                           {report.photo_path ? (
-                            <button
-                              onClick={() => setPreviewPhoto(getImageSrc(report.photo_path, false))}
-                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-500/15 hover:bg-blue-100 dark:hover:bg-blue-500/30 text-blue-600 dark:text-m3-primary border border-blue-200 dark:border-blue-500/30 text-xs font-semibold transition-all cursor-pointer"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                              <span>Lihat</span>
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => setPreviewPhoto(getImageSrc(report.photo_path, false))}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-500/15 hover:bg-blue-100 dark:hover:bg-blue-500/30 text-blue-600 dark:text-m3-primary border border-blue-200 dark:border-blue-500/30 text-xs font-semibold transition-all cursor-pointer shrink-0 shadow-2xs"
+                                title="Lihat foto bukti ukuran penuh"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>Lihat</span>
+                              </button>
+                              <PhotoAuthenticityBadge 
+                                status={report.photo_status} 
+                                duplicateWithId={report.duplicate_with_id} 
+                                duplicateDate={report.duplicate_date} 
+                                hasPhoto={true} 
+                              />
+                            </div>
                           ) : (
-                            <span className="text-slate-400 text-xs">-</span>
+                            <PhotoAuthenticityBadge 
+                              status="none" 
+                              hasPhoto={false} 
+                            />
                           )}
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          <PhotoAuthenticityBadge 
-                            status={report.photo_status} 
-                            duplicateWithId={report.duplicate_with_id} 
-                            duplicateDate={report.duplicate_date} 
-                            hasPhoto={Boolean(report.photo_path)} 
-                          />
-                        </td>
-                        <td className="py-3 px-4 text-slate-600 dark:text-slate-300 max-w-xs truncate">
+                        <td className="py-3 px-3.5 text-slate-600 dark:text-slate-300 max-w-[200px] truncate" title={report.notes || '-'}>
                           {report.notes || '-'}
                         </td>
-                        <td className="py-3 px-4 text-right">
+                        <td className="py-3 px-3.5 text-right whitespace-nowrap">
                           <button
                             onClick={(e) => requestDelete(report.id, e)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all cursor-pointer"
