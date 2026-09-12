@@ -456,14 +456,14 @@ const EmployeeForm = () => {
                   />
                 </div>
 
-                <div className="flex-1 p-3 rounded-xl bg-slate-900 dark:bg-[#121926] text-white border border-slate-800 dark:border-white/10 text-right">
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+                <div className="flex-1 p-3 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-500/30 text-right shadow-2xs">
+                  <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider block">
                     Estimasi Pemasukan
                   </span>
-                  <div className="text-lg font-bold font-mono tracking-tight text-white mt-0.5">
+                  <div className="text-lg font-bold font-mono tracking-tight text-emerald-950 dark:text-white mt-0.5">
                     <AnimatedCounter value={revenue} prefix="Rp " />
                   </div>
-                  <span className="text-[10px] text-slate-400 font-medium block">
+                  <span className="text-[10px] text-emerald-700/80 dark:text-emerald-300/70 font-medium block">
                     Rp 3.000 × {motorcycles} motor
                   </span>
                 </div>
@@ -1014,21 +1014,21 @@ const EmployeeForm = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-900 dark:bg-[#121926] text-white border border-slate-800 dark:border-white/10 shadow-sm">
+            <div className="p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-500/30 shadow-2xs">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                  <CircleDollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <CircleDollarSign className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                   Estimasi Pemasukan
                 </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-500/30">
                   Rp 3.000 / unit
                 </span>
               </div>
               <div className="flex items-baseline justify-between gap-2">
-                <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-white">
+                <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-emerald-950 dark:text-white">
                   <AnimatedCounter value={revenue} prefix="Rp " />
                 </div>
-                <span className="text-[11px] text-slate-400 font-medium">
+                <span className="text-[11px] text-emerald-700/80 dark:text-emerald-300/70 font-medium">
                   {motorcycles} motor {isOverload && `(+${extraMotors})`}
                 </span>
               </div>
