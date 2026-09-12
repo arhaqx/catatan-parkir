@@ -3,13 +3,14 @@ import React from 'react';
 /**
  * CapacityGauge - Professional Minimalist Radial Capacity Meter
  * Inspired by Linear / Apple Health metrics design.
- * Features non-alarmist color progression, refined 7px stroke, and clean typography.
+ * Features non-alarmist color progression, refined 6-7px stroke, and clean typography.
  */
 export const CapacityGauge = ({ 
   current = 0, 
   standardCapacity = 90, 
   maxEmergency = 110, 
-  size = 138 
+  size = 138,
+  showBadge = true
 }) => {
   const isOverload = current > standardCapacity;
   const isFull = current === standardCapacity;
@@ -17,8 +18,9 @@ export const CapacityGauge = ({
   const totalPercentage = Math.round((current / standardCapacity) * 100);
   const remaining = Math.max(0, standardCapacity - current);
   const extraMotors = Math.max(0, current - standardCapacity);
+  const isSmall = size < 115;
 
-  const strokeWidth = 7;
+  const strokeWidth = isSmall ? 6 : 7;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (standardPercentage / 100) * circumference;
@@ -26,7 +28,7 @@ export const CapacityGauge = ({
   // Refined color system (Linear / Stripe aesthetic)
   let strokeColor = '#3b82f6'; // Modern Blue
   let badgeConfig = {
-    label: current === 0 ? 'Area Parkir Kosong' : `Terisi ${totalPercentage}% • Sisa ${remaining} Unit`,
+    label: current === 0 ? 'Area Kosong' : `Terisi ${totalPercentage}% • Sisa ${remaining}`,
     bg: 'bg-slate-100 dark:bg-slate-800/80',
     text: 'text-slate-700 dark:text-slate-300',
     border: 'border-slate-200 dark:border-white/10',
@@ -36,7 +38,7 @@ export const CapacityGauge = ({
   if (isOverload) {
     strokeColor = '#f59e0b'; // Refined Amber Warning
     badgeConfig = {
-      label: `Overload +${extraMotors} Unit (${totalPercentage}%)`,
+      label: `Overload +${extraMotors} (${totalPercentage}%)`,
       bg: 'bg-amber-50 dark:bg-amber-950/40',
       text: 'text-amber-800 dark:text-amber-300',
       border: 'border-amber-200 dark:border-amber-500/30',
@@ -45,7 +47,7 @@ export const CapacityGauge = ({
   } else if (isFull) {
     strokeColor = '#10b981'; // Emerald (Full Capacity reached normally)
     badgeConfig = {
-      label: `Kapasitas Standar Penuh (90/90 Unit)`,
+      label: `Penuh (90/90 Unit)`,
       bg: 'bg-emerald-50 dark:bg-emerald-950/40',
       text: 'text-emerald-800 dark:text-emerald-300',
       border: 'border-emerald-200 dark:border-emerald-500/30',
@@ -54,7 +56,7 @@ export const CapacityGauge = ({
   } else if (standardPercentage >= 70) {
     strokeColor = '#2563eb'; // Deep Blue
     badgeConfig = {
-      label: `Hampir Penuh (${totalPercentage}%) • Sisa ${remaining} Unit`,
+      label: `Hampir Penuh (${totalPercentage}%)`,
       bg: 'bg-blue-50 dark:bg-blue-950/40',
       text: 'text-blue-800 dark:text-blue-300',
       border: 'border-blue-200 dark:border-blue-500/30',
@@ -63,7 +65,7 @@ export const CapacityGauge = ({
   } else if (current > 0) {
     strokeColor = '#3b82f6'; // Electric Blue
     badgeConfig = {
-      label: `Terisi ${totalPercentage}% • Sisa ${remaining} Unit`,
+      label: `Terisi ${totalPercentage}% • Sisa ${remaining}`,
       bg: 'bg-blue-50/70 dark:bg-blue-950/30',
       text: 'text-blue-700 dark:text-blue-300',
       border: 'border-blue-200/80 dark:border-blue-500/20',
@@ -72,7 +74,7 @@ export const CapacityGauge = ({
   }
 
   return (
-    <div className="flex flex-col items-center justify-center select-none py-1">
+    <div className="flex flex-col items-center justify-center select-none py-0.5">
       <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
         <svg className="w-full h-full transform -rotate-90" viewBox={`0 0 ${size} ${size}`}>
           {/* Background Track Circle */}
@@ -100,20 +102,30 @@ export const CapacityGauge = ({
 
         {/* Center Typography */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-3.5xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-none font-mono">
+          <span className={`font-bold tracking-tight text-slate-900 dark:text-white leading-none font-mono ${
+            isSmall ? 'text-2xl' : 'text-3.5xl sm:text-4xl'
+          }`}>
             {current}
           </span>
-          <span className="text-[11px] font-medium text-slate-400 dark:text-slate-400 mt-1">
-            dari {standardCapacity} unit
+          <span className={`font-medium text-slate-400 dark:text-slate-400 ${
+            isSmall ? 'text-[9px] mt-0.5' : 'text-[11px] mt-1'
+          }`}>
+            {isSmall ? `/ ${standardCapacity}` : `dari ${standardCapacity} unit`}
           </span>
         </div>
       </div>
 
-      {/* Modern Status Badge */}
-      <div className={`mt-3 px-3 py-1 rounded-full text-xs font-medium border ${badgeConfig.bg} ${badgeConfig.text} ${badgeConfig.border} flex items-center gap-1.5 shadow-2xs transition-all`}>
-        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${badgeConfig.dot}`} />
-        <span>{badgeConfig.label}</span>
-      </div>
+      {/* Optional Status Badge */}
+      {showBadge && (
+        <div className={`rounded-full font-medium border flex items-center gap-1.5 shadow-2xs transition-all ${
+          isSmall 
+            ? 'mt-1.5 px-2 py-0.5 text-[10px]' 
+            : 'mt-2.5 px-3 py-1 text-xs'
+        } ${badgeConfig.bg} ${badgeConfig.text} ${badgeConfig.border}`}>
+          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${badgeConfig.dot}`} />
+          <span className="truncate max-w-[180px]">{badgeConfig.label}</span>
+        </div>
+      )}
     </div>
   );
 };
