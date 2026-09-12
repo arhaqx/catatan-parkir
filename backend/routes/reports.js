@@ -8,6 +8,10 @@ const exceljs = require('exceljs');
 const { format, subDays, getDay } = require('date-fns');
 const { id } = require('date-fns/locale');
 const { getHolidayInfo } = require('../utils/indonesiaHolidays');
+const { processPhotoAuthenticity, backfillOldPhotos } = require('../utils/photoVerification');
+
+// Jalankan backfill hash untuk foto lama saat modul dimuat
+backfillOldPhotos(db);
 
 // Konfigurasi Cloudinary dari file .env
 cloudinary.config({
@@ -72,23 +76,31 @@ router.post('/', upload.single('photo'), async (req, res) => {
         }
     }
 
-    const sql = `INSERT INTO reports (date, total_motorcycles, total_revenue, notes, photo_path, officer_name) VALUES (?, ?, ?, ?, ?, ?)`;
-    const params = [date, motorcycles, total_revenue, notes || null, photo_path, assignedOfficer];
+    const initial_photo_status = req.file ? 'pending' : 'no_photo';
+    const sql = `INSERT INTO reports (date, total_motorcycles, total_revenue, notes, photo_path, officer_name, photo_status) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    const params = [date, motorcycles, total_revenue, notes || null, photo_path, assignedOfficer, initial_photo_status];
 
     db.run(sql, params, function(err) {
         if (err) {
             console.error('Error inserting report:', err);
             return res.status(500).json({ error: 'Gagal menyimpan laporan ke database' });
         }
+        const newReportId = this.lastID;
         res.status(201).json({
-            id: this.lastID,
+            id: newReportId,
             date,
             total_motorcycles: motorcycles,
             total_revenue,
             notes,
             photo_path,
-            officer_name: assignedOfficer
+            officer_name: assignedOfficer,
+            photo_status: initial_photo_status
         });
+
+        // Jalankan verifikasi keaslian foto secara asinkron di latar belakang
+        if (req.file && req.file.buffer) {
+            processPhotoAuthenticity(newReportId, req.file.buffer, db);
+        }
     });
 });
 
@@ -210,6 +222,7 @@ router.get('/export', async (req, res) => {
             { header: 'Total Pemasukan (Rp)', key: 'total_revenue', width: 22 },
             { header: 'Catatan Lapangan', key: 'notes', width: 35 },
             { header: 'Link Bukti Foto', key: 'photo_path', width: 45 },
+            { header: 'Keaslian Foto', key: 'photo_authenticity', width: 28 },
             { header: 'Waktu Input', key: 'created_at', width: 22 },
         ];
 
@@ -246,6 +259,15 @@ router.get('/export', async (req, res) => {
                 // fallback
             }
 
+            let authStr = '➖ Tanpa Foto';
+            if (row.photo_status === 'valid') {
+                authStr = '✅ Asli (Valid)';
+            } else if (row.photo_status === 'duplicate') {
+                authStr = `❌ Duplikat (Mirip #${row.duplicate_with_id || '-'} tgl ${row.duplicate_date || '-'})`;
+            } else if (row.photo_status === 'pending') {
+                authStr = '⏳ Sedang Diverifikasi';
+            }
+
             worksheet.addRow({
                 no: idx + 1,
                 id: row.id,
@@ -258,6 +280,7 @@ router.get('/export', async (req, res) => {
                 total_revenue: row.total_revenue,
                 notes: row.notes || '-',
                 photo_path: row.photo_path || '-',
+                photo_authenticity: authStr,
                 created_at: row.created_at
             });
         });

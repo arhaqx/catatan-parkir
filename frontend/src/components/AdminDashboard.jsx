@@ -39,7 +39,10 @@ import {
   Zap,
   Coffee,
   Building2,
-  UserCheck
+  UserCheck,
+  ShieldCheck,
+  ShieldAlert,
+  Fingerprint
 } from 'lucide-react';
 import { getReports, deleteReport, seedSampleReports, exportReportsToExcel, baseURL } from '../api';
 import { getHolidayInfo } from '../utils/indonesiaHolidays';
@@ -109,6 +112,54 @@ const getDayMeta = (dateStr) => {
       badgeClass: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30'
     };
   }
+};
+
+// Komponen Badge Status Keaslian Foto Laporan
+const PhotoAuthenticityBadge = ({ status, duplicateWithId, duplicateDate, hasPhoto }) => {
+  if (!hasPhoto) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-white/5">
+        Tanpa Foto
+      </span>
+    );
+  }
+
+  if (status === 'duplicate') {
+    return (
+      <div className="group relative inline-block">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-500/40 shadow-xs cursor-help">
+          <ShieldAlert className="w-3.5 h-3.5 text-red-600 dark:text-red-400 shrink-0" />
+          <span>✗ Duplikat</span>
+        </span>
+        {/* Tooltip detail laporan kembarannya */}
+        <div className="absolute left-0 bottom-full mb-1.5 hidden group-hover:block z-50 w-56 p-2.5 rounded-xl bg-slate-900 dark:bg-slate-950 text-white text-[11px] leading-snug shadow-xl border border-white/10 pointer-events-none">
+          <strong className="block text-red-400 font-bold mb-0.5 flex items-center gap-1">
+            <ShieldAlert className="w-3 h-3 text-red-400 shrink-0" /> Terindikasi Foto Lama
+          </strong>
+          <span className="text-slate-200">
+            Foto ini identik dengan laporan {duplicateDate ? `tanggal ${duplicateDate}` : ''} {duplicateWithId ? `(ID #${duplicateWithId})` : ''}.
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'valid') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
+        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+        <span>✓ Asli</span>
+      </span>
+    );
+  }
+
+  // Pending / default: Menganalisis
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30">
+      <Loader2 className="w-3 h-3 animate-spin text-blue-600 dark:text-m3-primary shrink-0" />
+      <span>Menganalisis...</span>
+    </span>
+  );
 };
 
 const AdminDashboard = () => {
@@ -753,6 +804,7 @@ const AdminDashboard = () => {
                     <th className="py-3 px-4">Status Kapasitas</th>
                     <th className="py-3 px-4">Pemasukan</th>
                     <th className="py-3 px-4">Foto Bukti</th>
+                    <th className="py-3 px-4">Keaslian Foto</th>
                     <th className="py-3 px-4">Catatan</th>
                     <th className="py-3 px-4 text-right">Aksi Admin</th>
                   </tr>
@@ -811,6 +863,14 @@ const AdminDashboard = () => {
                           ) : (
                             <span className="text-slate-400 text-xs">-</span>
                           )}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <PhotoAuthenticityBadge 
+                            status={report.photo_status} 
+                            duplicateWithId={report.duplicate_with_id} 
+                            duplicateDate={report.duplicate_date} 
+                            hasPhoto={Boolean(report.photo_path)} 
+                          />
                         </td>
                         <td className="py-3 px-4 text-slate-600 dark:text-slate-300 max-w-xs truncate">
                           {report.notes || '-'}
@@ -880,6 +940,12 @@ const AdminDashboard = () => {
                               <UserCheck className="w-2.5 h-2.5 text-blue-600 dark:text-m3-primary" />
                               {report.officer_name || 'Ucup'}
                             </span>
+                            <PhotoAuthenticityBadge 
+                              status={report.photo_status} 
+                              duplicateWithId={report.duplicate_with_id} 
+                              duplicateDate={report.duplicate_date} 
+                              hasPhoto={Boolean(report.photo_path)} 
+                            />
                           </div>
                         </div>
                         <div className="flex items-center gap-1">
@@ -893,6 +959,17 @@ const AdminDashboard = () => {
                           )}
                         </div>
                       </div>
+
+                      {/* Duplicate Warning Banner if photo is duplicate */}
+                      {report.photo_status === 'duplicate' && (
+                        <div className="mt-1 mb-2.5 p-2.5 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-500/30 text-[11px] text-red-700 dark:text-red-300 flex items-start gap-2">
+                          <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
+                          <div className="flex-1">
+                            <strong className="block font-bold">Foto Terindikasi Duplikat!</strong>
+                            <span>Foto ini sama/identik dengan laporan {report.duplicate_date ? `tanggal ${report.duplicate_date}` : ''} (ID #{report.duplicate_with_id}).</span>
+                          </div>
+                        </div>
+                      )}
 
                       <div className="text-lg font-black text-emerald-600 dark:text-m3-tertiary mb-2">
                         Rp {report.total_revenue?.toLocaleString('id-ID')}

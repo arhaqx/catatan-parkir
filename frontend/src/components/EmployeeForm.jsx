@@ -577,6 +577,7 @@ const EmployeeForm = () => {
                   <input
                     type="file"
                     accept="image/*"
+                    capture="environment"
                     onChange={handlePhotoChange}
                     className="hidden"
                     id="photo-upload-change"
@@ -595,6 +596,7 @@ const EmployeeForm = () => {
                 <input
                   type="file"
                   accept="image/*"
+                  capture="environment"
                   onChange={handlePhotoChange}
                   className="hidden"
                   id="photo-upload"
