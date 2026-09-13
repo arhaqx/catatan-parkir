@@ -485,31 +485,42 @@ const AdminDashboard = () => {
 
       {/* Header Bar */}
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 dark:bg-m3-primary-container text-blue-800 dark:text-m3-on-primary-container border border-blue-200 dark:border-m3-primary/30">
+        <div className="space-y-2 w-full md:w-auto">
+          {/* Status & Operational Chips */}
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/20 dark:border-blue-400/30 whitespace-nowrap shrink-0 shadow-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400 animate-pulse shrink-0" />
               Admin Looker
             </span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              • Operasional: Senin-Sabtu (Sabtu Lembur) • Minggu Libur
+
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 whitespace-nowrap shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+              <span>Senin–Sabtu <span className="text-slate-400 dark:text-slate-500 text-[10px]">(Lembur)</span></span>
+            </div>
+
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100/60 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 whitespace-nowrap shrink-0">
+              Minggu Libur
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
-            Dashboard Analitik Parkir
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-0.5">
-            Pantau pemasukan, kapasitas normal vs overload, shift lembur Sabtu, dan unduh laporan Excel
-          </p>
+
+          <div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+              Dashboard Analitik Parkir
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-0.5 leading-relaxed max-w-2xl">
+              Pantau pemasukan, kapasitas normal vs overload, shift lembur Sabtu, dan unduh laporan Excel
+            </p>
+          </div>
         </div>
 
         {/* Action Buttons Header & Theme Switcher */}
-        <div className="flex items-center gap-2.5 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+        <div className="flex items-center gap-2 sm:gap-2.5 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 shrink-0">
           <ThemeToggle />
 
           <button
             onClick={fetchReports}
             disabled={loading}
-            className="p-2.5 rounded-2xl m3-button-tonal cursor-pointer"
+            className="p-2.5 rounded-2xl m3-button-tonal cursor-pointer shrink-0"
             title="Muat ulang data"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-600 dark:text-m3-primary' : ''}`} />
@@ -519,7 +530,7 @@ const AdminDashboard = () => {
             <button
               onClick={handleSeed}
               disabled={seeding}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-blue-50 dark:bg-m3-surface-high hover:bg-blue-100 dark:hover:bg-m3-surface-highest border border-blue-200 dark:border-white/10 text-blue-700 dark:text-m3-secondary text-xs font-semibold cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-blue-50 dark:bg-m3-surface-high hover:bg-blue-100 dark:hover:bg-m3-surface-highest border border-blue-200 dark:border-white/10 text-blue-700 dark:text-m3-secondary text-xs font-semibold cursor-pointer whitespace-nowrap shrink-0"
             >
               <Sparkles className="w-4 h-4 text-blue-600 dark:text-m3-primary" />
               <span>{seeding ? 'Membuat...' : '+ Isi Sample Data'}</span>
@@ -529,7 +540,7 @@ const AdminDashboard = () => {
           <button
             onClick={handleExport}
             disabled={exporting || reports.length === 0}
-            className="flex-1 md:flex-initial flex items-center justify-center gap-2 m3-button-primary px-4 py-2.5 rounded-2xl font-bold text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer"
+            className="flex-1 md:flex-initial flex items-center justify-center gap-2 m3-button-primary px-4 py-2.5 rounded-2xl font-bold text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer shadow-sm"
           >
             {exporting ? (
               <Loader2 className="w-4 h-4 animate-spin" />
