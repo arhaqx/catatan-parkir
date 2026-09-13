@@ -495,11 +495,17 @@ const AdminDashboard = () => {
 
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 whitespace-nowrap shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-              <span>Senin–Sabtu <span className="text-slate-400 dark:text-slate-500 text-[10px]">(Lembur)</span></span>
+              <span>Senin–Jumat</span>
             </div>
 
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100/60 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 whitespace-nowrap shrink-0">
-              Minggu Libur
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 whitespace-nowrap shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+              <span>Sabtu <span className="text-slate-400 dark:text-slate-500 text-[10px]">(Lembur)</span></span>
+            </div>
+
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100/60 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 whitespace-nowrap shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600 shrink-0" />
+              <span>Minggu <span className="text-[10px] opacity-80">(Libur)</span></span>
             </span>
           </div>
 
