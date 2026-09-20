@@ -142,6 +142,7 @@ Base URL: `http://localhost:3001/api`
 | `POST` | `/reports/seed` | Generate data simulasi 7 hari untuk demo | - |
 | `GET` | `/reports/export` | Unduh rekap laporan dalam format file `.xlsx` | Query: `startDate`, `endDate` |
 
+thanks
 ---
 
 ## 👤 Penulis
