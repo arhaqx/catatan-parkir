@@ -87,6 +87,24 @@ export const createReport = async (formData) => {
 };
 
 /**
+ * Ambil ringkasan analitik dan metrik agregasi laporan parkir
+ * @param {Object} params - { startDate, endDate }
+ */
+export const getReportsSummary = async (params = {}) => {
+  const response = await api.get('/reports/summary', { params });
+  return response.data;
+};
+
+/**
+ * Ambil detail satu laporan berdasarkan ID
+ * @param {number|string} id - ID laporan
+ */
+export const getReportById = async (id) => {
+  const response = await api.get(`/reports/${id}`);
+  return response.data;
+};
+
+/**
  * Hapus data laporan berdasarkan ID (khusus otorisasi admin)
  * @param {number|string} id - ID laporan
  */

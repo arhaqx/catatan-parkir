@@ -133,6 +133,84 @@ router.get('/', (req, res) => {
     });
 });
 
+// GET /api/reports/summary - Get aggregate statistics and metrics
+router.get('/summary', (req, res) => {
+    const { startDate, endDate } = req.query;
+    
+    let whereClause = '';
+    let params = [];
+
+    if (startDate && endDate) {
+        whereClause = ` WHERE date BETWEEN ? AND ?`;
+        params.push(startDate, endDate);
+    } else if (startDate) {
+        whereClause = ` WHERE date >= ?`;
+        params.push(startDate);
+    } else if (endDate) {
+        whereClause = ` WHERE date <= ?`;
+        params.push(endDate);
+    }
+
+    const sql = `
+        SELECT 
+            COUNT(*) AS total_reports,
+            COALESCE(SUM(total_motorcycles), 0) AS total_motorcycles,
+            COALESCE(SUM(total_revenue), 0) AS total_revenue,
+            COALESCE(ROUND(AVG(total_motorcycles), 1), 0) AS avg_motorcycles,
+            COALESCE(MAX(total_motorcycles), 0) AS max_motorcycles,
+            COALESCE(MIN(total_motorcycles), 0) AS min_motorcycles,
+            COALESCE(SUM(CASE WHEN total_motorcycles > 90 THEN 1 ELSE 0 END), 0) AS overload_count,
+            COALESCE(SUM(CASE WHEN photo_status = 'valid' THEN 1 ELSE 0 END), 0) AS valid_photos,
+            COALESCE(SUM(CASE WHEN photo_status = 'duplicate' THEN 1 ELSE 0 END), 0) AS duplicate_photos,
+            COALESCE(SUM(CASE WHEN photo_status = 'pending' THEN 1 ELSE 0 END), 0) AS pending_photos,
+            COALESCE(SUM(CASE WHEN photo_path IS NULL OR photo_path = '' THEN 1 ELSE 0 END), 0) AS no_photos
+        FROM reports
+        ${whereClause}
+    `;
+
+    db.get(sql, params, (err, row) => {
+        if (err) {
+            console.error('Error fetching reports summary:', err);
+            return res.status(500).json({ error: 'Failed to fetch reports summary' });
+        }
+        res.json({
+            total_reports: row.total_reports,
+            total_motorcycles: row.total_motorcycles,
+            total_revenue: row.total_revenue,
+            avg_motorcycles: row.avg_motorcycles,
+            max_motorcycles: row.max_motorcycles,
+            min_motorcycles: row.min_motorcycles,
+            overload_count: row.overload_count,
+            standard_capacity: 90,
+            photo_stats: {
+                valid: row.valid_photos,
+                duplicate: row.duplicate_photos,
+                pending: row.pending_photos,
+                no_photo: row.no_photos
+            },
+            filter: {
+                startDate: startDate || null,
+                endDate: endDate || null
+            }
+        });
+    });
+});
+
+// GET /api/reports/:id - Get a single report entry by ID
+router.get('/:id', (req, res) => {
+    const { id } = req.params;
+    db.get(`SELECT * FROM reports WHERE id = ?`, [id], (err, row) => {
+        if (err) {
+            console.error('Error fetching report detail:', err);
+            return res.status(500).json({ error: 'Failed to fetch report detail' });
+        }
+        if (!row) {
+            return res.status(404).json({ error: `Laporan dengan ID ${id} tidak ditemukan` });
+        }
+        res.json(row);
+    });
+});
+
 // DELETE /api/reports/:id - Delete a report entry
 router.delete('/:id', (req, res) => {
     const { id } = req.params;
