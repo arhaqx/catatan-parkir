@@ -1,5 +1,12 @@
 # 🏍️ Catatan Parkir Pabrik (Factory Parking Management System)
 
+[![CI Pipeline](https://github.com/arhaqx/catatan-parkir/actions/workflows/ci.yml/badge.svg)](https://github.com/arhaqx/catatan-parkir/actions/workflows/ci.yml)
+![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=nodedotjs&logoColor=white)
+![Express](https://img.shields.io/badge/Express-5.x-000000?logo=express&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-38B2AC?logo=tailwind-css&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white)
+
 Sistem pencatatan harian dan manajemen operasional parkir kendaraan roda dua internal pabrik. Aplikasi full-stack modern ini mencakup pencatatan shift petugas lapangan dengan bukti dokumentasi foto, verifikasi keaslian foto (dHash), integrasi kalender hari libur nasional, kalkulasi tarif otomatis, proteksi keamanan PIN, dashboard analitik admin, dan ekspor data ke Microsoft Excel (.xlsx).
 
 ---
@@ -34,12 +41,14 @@ Sistem pencatatan harian dan manajemen operasional parkir kendaraan roda dua int
 - **HTTP Client:** Axios
 
 ### Backend
-- **Runtime & Framework:** Node.js + Express.js (v5)
+- **Runtime & Framework:** Node.js (v18+) + Express.js (v5)
 - **Database:** SQLite3 (`database.sqlite`)
-- **Image Processing & Storage:** Multer, Cloudinary SDK, & dHash Image Hasher
+- **Image Processing & Storage:** Multer, Cloudinary SDK, Sharp (dHash Image Hasher)
 - **Spreadsheet Generator:** ExcelJS
 - **Date & Calendar Utility:** date-fns + dataset Hari Libur Nasional Indonesia
 - **Process Manager:** PM2 (Production background)
+- **Testing:** Native Node.js Test Runner (`node:test`, `node:assert`)
+- **CI/CD:** GitHub Actions
 
 ---
 
@@ -47,12 +56,19 @@ Sistem pencatatan harian dan manajemen operasional parkir kendaraan roda dua int
 
 ```plaintext
 catatan-parkir/
+├── .github/
+│   └── workflows/
+│       └── ci.yml                 # GitHub Actions CI workflow
 ├── backend/
 │   ├── routes/
 │   │   └── reports.js             # Endpoint laporan, upload Cloudinary, & export Excel
 │   ├── utils/
 │   │   ├── photoVerification.js   # Verifikasi visual dHash foto duplikat
 │   │   └── indonesiaHolidays.js   # Kalender libur nasional & jadwal shift
+│   ├── tests/
+│   │   ├── indonesiaHolidays.test.js
+│   │   ├── photoVerification.test.js
+│   │   └── reportsCalculation.test.js
 │   ├── database.js                # Inisialisasi koneksi & skema SQLite
 │   ├── database.sqlite            # File database lokal SQLite
 │   ├── server.js                  # Express server entry point (Port 3001)
@@ -105,15 +121,26 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 Jalankan server backend:
 ```bash
-# Mode development biasa
-node server.js
+# Mode development (auto-reload)
+npm run dev
+
+# Mode production
+npm start
 
 # Atau menggunakan PM2 (Production background)
 pm2 start server.js --name "parkir-api"
 ```
 Server akan aktif di `http://localhost:3001`.
 
-### 3. Setup Frontend
+### 3. Menjalankan Unit Test Backend
+
+Backend dilengkapi dengan test suite otomatis menggunakan test runner bawaan Node.js:
+```bash
+cd backend
+npm test
+```
+
+### 4. Setup Frontend
 
 Buka terminal baru dan masuk ke direktori frontend:
 ```bash
@@ -137,6 +164,8 @@ Base URL: `http://localhost:3001/api`
 | :--- | :--- | :--- | :--- |
 | `GET` | `/` | Health check status API & koneksi Cloudinary | - |
 | `GET` | `/reports` | Mengambil daftar riwayat laporan | Query: `startDate`, `endDate` |
+| `GET` | `/reports/summary` | Ringkasan metrik agregasi & analitik | Query: `startDate`, `endDate` |
+| `GET` | `/reports/:id` | Mengambil data detail laporan tunggal | Path param: `id` |
 | `POST` | `/reports` | Menyimpan laporan shift parkir baru | `multipart/form-data`: `date`, `total_motorcycles`, `pic`, `notes`, `photo` (file) |
 | `DELETE` | `/reports/:id` | Menghapus laporan (di frontend diproteksi PIN 1312) | Path param: `id` |
 | `POST` | `/reports/seed` | Generate data simulasi 7 hari untuk demo | - |
