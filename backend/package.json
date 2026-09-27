@@ -7,10 +7,25 @@
     "dev": "node --watch server.js",
     "test": "node --test tests/**/*.test.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": [
+    "parking-management",
+    "express",
+    "sqlite",
+    "dhash",
+    "cloudinary",
+    "indonesia-holidays"
+  ],
+  "author": "Muhammad Arinal Haq <arhaq30@gmail.com>",
+  "license": "MIT",
+  "description": "Backend API RESTful untuk Sistem Manajemen Parkir Pabrik",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arhaqx/catatan-parkir.git"
+  },
+  "bugs": {
+    "url": "https://github.com/arhaqx/catatan-parkir/issues"
+  },
+  "homepage": "https://github.com/arhaqx/catatan-parkir#readme",
   "dependencies": {
     "cloudinary": "^2.10.0",
     "cors": "^2.8.6",
