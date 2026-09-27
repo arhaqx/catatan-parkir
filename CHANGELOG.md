@@ -11,6 +11,7 @@ Format ini mengacu pada [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - Workflow GitHub Actions CI (`.github/workflows/ci.yml`) untuk verifikasi otomatis di Node.js 20 & 22.
 - Endpoint `GET /api/reports/summary` untuk agregasi metrik, rata-rata, dan statistik foto.
 - Endpoint `GET /api/reports/:id` untuk detail satu entri laporan.
+- Helper `calculateDailyAverage` pada `formatters.js` dan parameter `DB_BUSY_TIMEOUT_MS`.
 - Utilitas `backend/utils/formatters.js` untuk format mata uang Rupiah dan kalkulasi persentase kapasitas.
 - Modul konstanta operasional terpusat `backend/constants/parkingConfig.js`.
 - Dokumentasi `ARCHITECTURE.md`, `CONTRIBUTING.md`, dan lisensi open-source `LICENSE`.
