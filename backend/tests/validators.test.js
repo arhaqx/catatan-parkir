@@ -35,6 +35,8 @@ describe('Payload & Format Validators Utility', () => {
       assert.equal(result.sanitized.total_motorcycles, 85);
       assert.equal(result.sanitized.officer_name, 'Ucup');
       assert.equal(result.sanitized.notes, 'Kondisi aman lancar');
+      assert.equal(result.sanitized.officer_name, 'Ucup');
+      assert.equal(typeof result.sanitized.date, 'string');
     });
 
     test('menolak jika tanggal kosong atau format salah', () => {
