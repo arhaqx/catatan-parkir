@@ -3,7 +3,8 @@ const assert = require('node:assert/strict');
 const {
   formatRupiah,
   parseNonNegativeInt,
-  calculateCapacityStatus
+  calculateCapacityStatus,
+  calculateDailyAverage
 } = require('../utils/formatters');
 
 describe('Formatters & Capacity Calculation Utility', () => {
@@ -60,4 +61,16 @@ describe('Formatters & Capacity Calculation Utility', () => {
       assert.equal(result.statusText, '⚠️ Overload (+15 Motor)');
     });
   });
+
+  describe('calculateDailyAverage', () => {
+    test('menghitung rata-rata harian dengan benar', () => {
+      assert.equal(calculateDailyAverage(270, 3), 90);
+      assert.equal(calculateDailyAverage(275, 3), 91.7);
+    });
+
+    test('mengembalikan 0 jika total hari adalah 0', () => {
+      assert.equal(calculateDailyAverage(100, 0), 0);
+    });
+  });
+
 });
