@@ -9,6 +9,7 @@ const { format, subDays, getDay } = require('date-fns');
 const { id } = require('date-fns/locale');
 const { getHolidayInfo } = require('../utils/indonesiaHolidays');
 const { processPhotoAuthenticity, backfillOldPhotos } = require('../utils/photoVerification');
+const PARKING_CONFIG = require('../constants/parkingConfig');
 
 // Jalankan backfill hash untuk foto lama saat modul dimuat
 backfillOldPhotos(db);
@@ -24,7 +25,7 @@ cloudinary.config({
 const storage = multer.memoryStorage();
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 10 * 1024 * 1024 } // Batas 10MB per foto
+    limits: { fileSize: PARKING_CONFIG.MAX_PHOTO_SIZE_BYTES } // Batas 10MB per foto
 });
 
 // Helper function untuk upload buffer ke Cloudinary
@@ -58,8 +59,8 @@ router.post('/', upload.single('photo'), async (req, res) => {
     }
 
     const motorcycles = parseInt(total_motorcycles, 10);
-    const total_revenue = motorcycles * 3000;
-    const assignedOfficer = (officer_name && String(officer_name).trim()) ? String(officer_name).trim() : 'Ucup';
+    const total_revenue = motorcycles * PARKING_CONFIG.RATE_PER_MOTORCYCLE;
+    const assignedOfficer = (officer_name && String(officer_name).trim()) ? String(officer_name).trim() : PARKING_CONFIG.DEFAULT_OFFICER_NAME;
     let photo_path = null;
 
     // Jika ada file foto yang diunggah
@@ -181,7 +182,8 @@ router.get('/summary', (req, res) => {
             max_motorcycles: row.max_motorcycles,
             min_motorcycles: row.min_motorcycles,
             overload_count: row.overload_count,
-            standard_capacity: 90,
+            standard_capacity: PARKING_CONFIG.STANDARD_CAPACITY,
+            parking_rate: PARKING_CONFIG.RATE_PER_MOTORCYCLE,
             photo_stats: {
                 valid: row.valid_photos,
                 duplicate: row.duplicate_photos,
