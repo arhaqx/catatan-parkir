@@ -19,7 +19,10 @@ const PARKING_CONFIG = {
   MAX_PHOTO_SIZE_BYTES: 10 * 1024 * 1024,
 
   // Hamming distance threshold untuk deteksi foto mirip / duplikat (dHash 64-bit)
-  DHASH_SIMILARITY_THRESHOLD: 6
+  DHASH_SIMILARITY_THRESHOLD: 6,
+
+  // Timeout toleransi SQLite busy (ms)
+  DB_BUSY_TIMEOUT_MS: 5000
 };
 
 module.exports = PARKING_CONFIG;
