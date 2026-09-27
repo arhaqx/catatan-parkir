@@ -171,6 +171,20 @@ Base URL: `http://localhost:3001/api`
 | `POST` | `/reports/seed` | Generate data simulasi 7 hari untuk demo | - |
 | `GET` | `/reports/export` | Unduh rekap laporan dalam format file `.xlsx` | Query: `startDate`, `endDate` |
 
+
+## 🔧 Pemecahan Masalah (Troubleshooting)
+
+- **Database Locked (SQLite):** Jika muncul error , pastikan tidak ada proses lain yang membuka file secara eksklusif dan gunakan perintah Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [parkir-api](ids: [ 0 ])
+[PM2] [parkir-api](0) ✓
+┌────┬───────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name          │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ parkir-api    │ default     │ 1.0.0   │ fork    │ 1769425  │ 0s     │ 1    │ online    │ 0%       │ 25.6mb   │ uchiha   │ disabled │
+└────┴───────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+host metrics | cpu: 2.8% | ram usage: 77.7% | eth0: ⇓ 0.006mb/s ⇑ 0.004mb/s | disk: ⇓ 1.739mb/s ⇑ 0.585mb/s |.
+- **Upload Foto Timeout:** Pastikan kredensial Cloudinary di file  sudah benar dan format file gambar bertipe JPEG/PNG/WebP.
+
 ## 📚 Dokumentasi Lanjutan
 
 - [Arsitektur Sistem & Desain Teknis (ARCHITECTURE.md)](./ARCHITECTURE.md)
