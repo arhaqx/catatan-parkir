@@ -171,7 +171,17 @@ Base URL: `http://localhost:3001/api`
 | `POST` | `/reports/seed` | Generate data simulasi 7 hari untuk demo | - |
 | `GET` | `/reports/export` | Unduh rekap laporan dalam format file `.xlsx` | Query: `startDate`, `endDate` |
 
-thanks
+## 📚 Dokumentasi Lanjutan
+
+- [Arsitektur Sistem & Desain Teknis (ARCHITECTURE.md)](./ARCHITECTURE.md)
+- [Panduan Kontribusi (CONTRIBUTING.md)](./CONTRIBUTING.md)
+- [Catatan Rilis & Perubahan (CHANGELOG.md)](./CHANGELOG.md)
+
+---
+
+## 📄 Lisensi
+Proyek ini dilisensikan di bawah lisensi [MIT License](./LICENSE).
+
 ---
 
 ## 👤 Penulis
