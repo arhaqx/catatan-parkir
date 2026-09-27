@@ -41,6 +41,12 @@ cd backend
 npm test
 ```
 
+
+Menjalankan file test tertentu:
+```bash
+node --test tests/formatters.test.js
+```
+
 Pastikan semua pengujian lolos tanpa kegagalan (`pass`, `fail: 0`) sebelum membuat Pull Request.
 
 ---
