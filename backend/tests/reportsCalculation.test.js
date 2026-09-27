@@ -84,4 +84,14 @@ describe('Reports Data & Aggregation Logic', () => {
       done();
     });
   });
+
+  test('kolom officer_name dan photo_status tersimpan dengan benar', (t, done) => {
+    db.get('SELECT officer_name, photo_status FROM reports WHERE id = 1', [], (err, row) => {
+      assert.ifError(err);
+      assert.equal(row.officer_name, 'Ucup');
+      assert.equal(row.photo_status, 'valid');
+      done();
+    });
+  });
+
 });
