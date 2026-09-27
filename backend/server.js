@@ -23,14 +23,21 @@ app.get('/', (req, res) => {
     res.json({
         status: 'online',
         message: 'Factory Parking Management API is running perfectly!',
+        version: '1.0.0',
+        uptime_seconds: Math.floor(process.uptime()),
+        timestamp: new Date().toISOString(),
         cloudinary: process.env.CLOUDINARY_CLOUD_NAME ? 'configured' : 'not_configured'
     });
 });
 
 // Start server
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-    if (process.env.CLOUDINARY_CLOUD_NAME) {
-        console.log(`Cloudinary configured for cloud: ${process.env.CLOUDINARY_CLOUD_NAME}`);
-    }
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server is running on http://localhost:${PORT}`);
+        if (process.env.CLOUDINARY_CLOUD_NAME) {
+            console.log(`Cloudinary configured for cloud: ${process.env.CLOUDINARY_CLOUD_NAME}`);
+        }
+    });
+}
+
+module.exports = app;
