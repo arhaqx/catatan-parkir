@@ -1,3 +1,6 @@
+/**
+ * Inisialisasi Database SQLite3 dan Skema Tabel Laporan
+ */
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
