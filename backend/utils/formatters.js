@@ -51,7 +51,22 @@ function calculateCapacityStatus(current, standardLimit = 90) {
   };
 }
 
+
+/**
+ * Menghitung rata-rata kendaraan per hari dengan pembulatan satu desimal
+ * @param {number} totalMotorcycles 
+ * @param {number} totalDays 
+ * @returns {number}
+ */
+function calculateDailyAverage(totalMotorcycles, totalDays) {
+  const count = parseNonNegativeInt(totalMotorcycles, 0);
+  const days = parseNonNegativeInt(totalDays, 0);
+  if (days === 0) return 0;
+  return Math.round((count / days) * 10) / 10;
+}
+
 module.exports = {
+  calculateDailyAverage,
   formatRupiah,
   parseNonNegativeInt,
   calculateCapacityStatus
