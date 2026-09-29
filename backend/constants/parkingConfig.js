@@ -22,7 +22,14 @@ const PARKING_CONFIG = {
   DHASH_SIMILARITY_THRESHOLD: 6,
 
   // Timeout toleransi SQLite busy (ms)
-  DB_BUSY_TIMEOUT_MS: 5000
+  DB_BUSY_TIMEOUT_MS: 5000,
+
+  // Konfigurasi pagination data laporan
+  DEFAULT_PAGE_SIZE: 20,
+  MAX_PAGE_SIZE: 100,
+
+  // Versi API saat ini
+  API_VERSION: '1.4.0'
 };
 
 module.exports = PARKING_CONFIG;
