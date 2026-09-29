@@ -2,7 +2,8 @@ const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
 const {
   isValidDateFormat,
-  validateReportPayload
+  validateReportPayload,
+  isValidDateRange
 } = require('../utils/validators');
 
 describe('Payload & Format Validators Utility', () => {
@@ -69,6 +70,35 @@ describe('Payload & Format Validators Utility', () => {
       });
       assert.equal(result.isValid, false);
       assert.match(result.error, /melebihi batas wajar/);
+    });
+  });
+
+  describe('isValidDateRange', () => {
+    test('menerima rentang tanggal yang valid dan berurutan', () => {
+      const result = isValidDateRange('2026-09-01', '2026-09-30');
+      assert.equal(result.isValid, true);
+    });
+
+    test('menerima jika tanggal awal sama dengan tanggal akhir', () => {
+      const result = isValidDateRange('2026-09-15', '2026-09-15');
+      assert.equal(result.isValid, true);
+    });
+
+    test('menerima rentang parsial jika salah satu kosong', () => {
+      assert.equal(isValidDateRange('2026-09-01', null).isValid, true);
+      assert.equal(isValidDateRange(null, '2026-09-30').isValid, true);
+      assert.equal(isValidDateRange(null, null).isValid, true);
+    });
+
+    test('menolak jika format startDate atau endDate tidak valid', () => {
+      assert.equal(isValidDateRange('2026/09/01', '2026-09-30').isValid, false);
+      assert.equal(isValidDateRange('2026-09-01', 'bukan-tanggal').isValid, false);
+    });
+
+    test('menolak jika startDate lebih besar dari endDate', () => {
+      const result = isValidDateRange('2026-09-30', '2026-09-01');
+      assert.equal(result.isValid, false);
+      assert.match(result.error, /tidak boleh lebih besar/);
     });
   });
 });
