@@ -66,7 +66,27 @@ function validateReportPayload(payload) {
   };
 }
 
+/**
+ * Memvalidasi apakah rentang tanggal (startDate s/d endDate) valid
+ * @param {string} startDate - Format YYYY-MM-DD
+ * @param {string} endDate - Format YYYY-MM-DD
+ * @returns {{ isValid: boolean, error?: string }}
+ */
+function isValidDateRange(startDate, endDate) {
+  if (startDate && !isValidDateFormat(startDate)) {
+    return { isValid: false, error: 'Format startDate harus berupa YYYY-MM-DD' };
+  }
+  if (endDate && !isValidDateFormat(endDate)) {
+    return { isValid: false, error: 'Format endDate harus berupa YYYY-MM-DD' };
+  }
+  if (startDate && endDate && startDate > endDate) {
+    return { isValid: false, error: 'startDate tidak boleh lebih besar dari endDate' };
+  }
+  return { isValid: true };
+}
+
 module.exports = {
   isValidDateFormat,
-  validateReportPayload
+  validateReportPayload,
+  isValidDateRange
 };
