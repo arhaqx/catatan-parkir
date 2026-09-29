@@ -5,6 +5,20 @@ Format ini mengacu pada [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
+## [1.4.0] - September 2026
+
+### Added
+- Helper validasi rentang tanggal `isValidDateRange(startDate, endDate)` pada `validators.js`.
+- Helper formatting utilisasi kapasitas `formatUtilizationPercentage` pada `formatters.js`.
+- Modul logger terstruktur `backend/utils/logger.js` dengan ISO timestamp dan level logging.
+- Konfigurasi pagination (`DEFAULT_PAGE_SIZE`, `MAX_PAGE_SIZE`) dan `API_VERSION` pada `parkingConfig.js`.
+- Kebijakan keamanan terpusat pada dokumen `SECURITY.md`.
+- Rangkaian unit test baru dengan total 54 passing assertions di Node.js native test runner.
+
+### Changed
+- Standardisasi output log startup server dengan modul logger terstruktur.
+- Pembersihan panduan troubleshooting dan penambahan tabel status code HTTP di `README.md`.
+
 ## [1.3.0] - September 2026
 
 ### Added
