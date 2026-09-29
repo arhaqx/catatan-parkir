@@ -4,7 +4,8 @@ const {
   formatRupiah,
   parseNonNegativeInt,
   calculateCapacityStatus,
-  calculateDailyAverage
+  calculateDailyAverage,
+  formatUtilizationPercentage
 } = require('../utils/formatters');
 
 describe('Formatters & Capacity Calculation Utility', () => {
@@ -70,6 +71,19 @@ describe('Formatters & Capacity Calculation Utility', () => {
 
     test('mengembalikan 0 jika total hari adalah 0', () => {
       assert.equal(calculateDailyAverage(100, 0), 0);
+    });
+  });
+
+  describe('formatUtilizationPercentage', () => {
+    test('memformat persentase utilisasi dengan satu desimal', () => {
+      assert.equal(formatUtilizationPercentage(45, 90), '50.0%');
+      assert.equal(formatUtilizationPercentage(90, 90), '100.0%');
+      assert.equal(formatUtilizationPercentage(77, 90), '85.6%');
+    });
+
+    test('mengembalikan 0.0% jika kapasitas nol atau invalid', () => {
+      assert.equal(formatUtilizationPercentage(50, 0), '0.0%');
+      assert.equal(formatUtilizationPercentage(0, 90), '0.0%');
     });
   });
 

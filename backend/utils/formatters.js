@@ -73,8 +73,8 @@ function calculateDailyAverage(totalMotorcycles, totalDays) {
  */
 function formatUtilizationPercentage(current, capacity = 90) {
   const currentCount = parseNonNegativeInt(current, 0);
-  const totalCapacity = parseNonNegativeInt(capacity, 90) || 90;
-  if (totalCapacity === 0) return '0.0%';
+  const totalCapacity = Number(capacity);
+  if (isNaN(totalCapacity) || totalCapacity <= 0) return '0.0%';
   const pct = (currentCount / totalCapacity) * 100;
   return pct.toFixed(1) + '%';
 }
