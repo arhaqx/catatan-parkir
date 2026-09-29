@@ -10,4 +10,11 @@ describe('Parking Operational Configuration', () => {
     assert.equal(PARKING_CONFIG.DEFAULT_OFFICER_NAME, 'Ucup');
     assert.equal(PARKING_CONFIG.DB_BUSY_TIMEOUT_MS, 5000);
   });
+
+  test('memiliki konfigurasi pagination dan batas ukuran yang valid', () => {
+    assert.equal(PARKING_CONFIG.DEFAULT_PAGE_SIZE, 20);
+    assert.equal(PARKING_CONFIG.MAX_PAGE_SIZE, 100);
+    assert.ok(PARKING_CONFIG.DEFAULT_PAGE_SIZE < PARKING_CONFIG.MAX_PAGE_SIZE);
+    assert.equal(PARKING_CONFIG.API_VERSION, '1.4.0');
+  });
 });
