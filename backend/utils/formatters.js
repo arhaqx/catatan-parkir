@@ -65,9 +65,24 @@ function calculateDailyAverage(totalMotorcycles, totalDays) {
   return Math.round((count / days) * 10) / 10;
 }
 
+/**
+ * Memformat persentase tingkat keterisian parkir dengan 1 desimal
+ * @param {number} current - Jumlah kendaraan saat ini
+ * @param {number} capacity - Kapasitas maksimal area
+ * @returns {string} Contoh: "85.5%" atau "0.0%" jika kapasitas invalid
+ */
+function formatUtilizationPercentage(current, capacity = 90) {
+  const currentCount = parseNonNegativeInt(current, 0);
+  const totalCapacity = parseNonNegativeInt(capacity, 90) || 90;
+  if (totalCapacity === 0) return '0.0%';
+  const pct = (currentCount / totalCapacity) * 100;
+  return pct.toFixed(1) + '%';
+}
+
 module.exports = {
   calculateDailyAverage,
   formatRupiah,
   parseNonNegativeInt,
-  calculateCapacityStatus
+  calculateCapacityStatus,
+  formatUtilizationPercentage
 };
