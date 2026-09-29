@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const db = require('./database'); // Initialize database
 const reportsRoutes = require('./routes/reports');
+const logger = require('./utils/logger');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -33,9 +34,9 @@ app.get('/', (req, res) => {
 // Start server
 if (require.main === module) {
     app.listen(PORT, () => {
-        console.log(`Server is running on http://localhost:${PORT}`);
+        logger.info(`Server is running on http://localhost:${PORT}`);
         if (process.env.CLOUDINARY_CLOUD_NAME) {
-            console.log(`Cloudinary configured for cloud: ${process.env.CLOUDINARY_CLOUD_NAME}`);
+            logger.info(`Cloudinary configured for cloud: ${process.env.CLOUDINARY_CLOUD_NAME}`);
         }
     });
 }
