@@ -174,16 +174,18 @@ Base URL: `http://localhost:3001/api`
 
 ## 🔧 Pemecahan Masalah (Troubleshooting)
 
-- **Database Locked (SQLite):** Jika muncul error , pastikan tidak ada proses lain yang membuka file secara eksklusif dan gunakan perintah Use --update-env to update environment variables
-[PM2] Applying action restartProcessId on app [parkir-api](ids: [ 0 ])
-[PM2] [parkir-api](0) ✓
-┌────┬───────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
-│ id │ name          │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
-├────┼───────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ parkir-api    │ default     │ 1.0.0   │ fork    │ 1769425  │ 0s     │ 1    │ online    │ 0%       │ 25.6mb   │ uchiha   │ disabled │
-└────┴───────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
-host metrics | cpu: 2.8% | ram usage: 77.7% | eth0: ⇓ 0.006mb/s ⇑ 0.004mb/s | disk: ⇓ 1.739mb/s ⇑ 0.585mb/s |.
-- **Upload Foto Timeout:** Pastikan kredensial Cloudinary di file  sudah benar dan format file gambar bertipe JPEG/PNG/WebP.
+- **Database Locked (SQLite):** Jika muncul error `SQLITE_BUSY`, sistem telah dilengkapi dengan `PRAGMA busy_timeout = 5000` (5 detik) untuk antrean query. Jika diperlukan restart: `pm2 restart parkir-api`.
+- **Upload Foto Timeout:** Pastikan kredensial Cloudinary di file `.env` sudah benar dan format file gambar bertipe JPEG/PNG/WebP.
+
+### 🌐 Format Respon & Kode Status HTTP
+
+| HTTP Code | Arti / Status | Keterangan |
+| :--- | :--- | :--- |
+| `200 OK` | Berhasil | Data berhasil diambil atau diproses |
+| `201 Created` | Berhasil Dibuat | Laporan baru berhasil disimpan ke database |
+| `400 Bad Request` | Permintaan Tidak Valid | Parameter atau payload validasi gagal (format tanggal/angka salah) |
+| `404 Not Found` | Tidak Ditemukan | ID laporan tidak ditemukan pada sistem |
+| `500 Server Error` | Kesalahan Internal | Kesalahan koneksi database atau upload Cloudinary |
 
 ## 📚 Dokumentasi Lanjutan
 
