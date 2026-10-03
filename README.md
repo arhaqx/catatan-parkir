@@ -191,6 +191,12 @@ Base URL: `http://localhost:3001/api`
 
 - [Arsitektur Sistem & Desain Teknis (ARCHITECTURE.md)](./ARCHITECTURE.md)
 - [Panduan Kontribusi (CONTRIBUTING.md)](./CONTRIBUTING.md)
+- [Panduan Deployment Server (DEPLOYMENT.md)](./DEPLOYMENT.md)
+- [Panduan Pengujian Otomatis (TESTING.md)](./TESTING.md)
+- [Struktur Direktori Repositori (PROJECT_STRUCTURE.md)](./PROJECT_STRUCTURE.md)
+- [Peta Jalan Pengembangan (ROADMAP.md)](./ROADMAP.md)
+- [Kebijakan Keamanan (SECURITY.md)](./SECURITY.md)
+- [Pedoman Kode Etik (CODE_OF_CONDUCT.md)](./CODE_OF_CONDUCT.md)
 - [Catatan Rilis & Perubahan (CHANGELOG.md)](./CHANGELOG.md)
 
 ---
