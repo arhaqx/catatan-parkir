@@ -1,0 +1,44 @@
+openapi: 3.0.3
+info:
+  title: Factory Parking Management API
+  description: REST API Sistem Pengelolaan Catatan Parkir Sepeda Motor Pabrik
+  version: 1.4.0
+  contact:
+    name: Muhammad Arinal Haq
+    email: arhaq30@gmail.com
+servers:
+  - url: http://localhost:3001/api
+    description: Local Development Server
+paths:
+  /:
+    get:
+      summary: Health check status server
+      responses:
+        '200':
+          description: Server online dan beroperasi normal
+  /reports:
+    get:
+      summary: Mengambil daftar laporan parkir
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Daftar laporan berhasil diambil
+    post:
+      summary: Menyimpan laporan baru
+      responses:
+        '201':
+          description: Laporan berhasil dibuat
+  /reports/summary:
+    get:
+      summary: Agregasi analitik statistik parkir
+      responses:
+        '200':
+          description: Ringkasan metrik analitik berhasil dihitung
