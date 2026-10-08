@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/arhaqx/catatan-parkir#readme",
   "dependencies": {
-    "cloudinary": "^2.10.0",
+    "cloudinary": "^2.11.0",
     "cors": "^2.8.6",
     "date-fns": "^4.4.0",
     "dotenv": "^17.4.2",
