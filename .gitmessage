@@ -1,0 +1,8 @@
+# <tipe>(<lingkup>): <deskripsi singkat imperative>
+#
+# Tipe: feat | fix | docs | style | refactor | perf | test | chore
+# Lingkup contoh: backend, frontend, api, config, ci
+#
+# Mengapa perubahan ini dibuat?
+#
+# Catatan penting atau referensi issue:
